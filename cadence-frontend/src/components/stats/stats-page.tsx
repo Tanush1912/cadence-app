@@ -8,7 +8,6 @@ import { useHabitDependencies } from "@/lib/hooks/use-habit-dependencies";
 import { useGun } from "@/lib/gun/gun-provider";
 import { cn } from "@/lib/utils";
 import { HabitIcon } from "@/lib/utils/habit-icons";
-import { HealthRing } from "./health-ring";
 
 const GREEN_SCALE = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

@@ -17,14 +17,11 @@ import { DailyProgressBar } from "./daily-progress-bar";
 import { HabitDrawer } from "./habit-drawer";
 import { JournalCard } from "./journal-card";
 import { CheckinDrawer } from "./checkin-drawer";
-import { FocusCard } from "./focus-card";
 import { useProfile } from "@/lib/hooks/use-profile";
-import { useFocusHabit } from "@/lib/hooks/use-focus-habit";
 import { useExperiments } from "@/lib/hooks/use-experiments";
 import { ExperimentCard } from "./experiment-card";
 import { SearchDrawer } from "./search-drawer";
 import { SkipDrawer } from "./skip-drawer";
-import { ReflectionDrawer } from "./reflection-drawer";
 import { BundleCard } from "./bundle-card";
 import { StreakRecoveryBanner } from "./streak-recovery-banner";
 import { CalendarDrawer } from "./calendar-drawer";
@@ -43,7 +40,6 @@ export function HabitsPage() {
   const { streaks, recomputeStreak } = useStreaks();
   const { completed, total, percentage } = useDailyProgress(habits, logs);
   const { profile, updateProfile } = useProfile();
-  const focusHabit = useFocusHabit(selectedDate);
   const { activeExperiment, isExpired, endExperiment } = useExperiments();
   const { habits: rawHabits } = useSharedData();
   const nudges = useCoachingNudges();
@@ -65,7 +61,6 @@ export function HabitsPage() {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [reflectionOpen, setReflectionOpen] = useState(false);
   const [skipDrawerOpen, setSkipDrawerOpen] = useState(false);
   const [skippingHabit, setSkippingHabit] = useState<Habit | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -326,12 +321,6 @@ export function HabitsPage() {
         onOpenChange={setSkipDrawerOpen}
       />
 
-      <ReflectionDrawer
-        open={reflectionOpen}
-        onOpenChange={setReflectionOpen}
-        weekSummary={null}
-        apiKey={profile.aiKey}
-      />
 
       {calendarHabit && (
         <CalendarDrawer

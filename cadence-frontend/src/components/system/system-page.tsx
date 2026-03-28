@@ -10,6 +10,7 @@ import { HabitListEditor } from "./habit-list-editor";
 import { ExperimentCreator } from "./experiment-creator";
 import { BundleEditor } from "./bundle-editor";
 import { ReminderSettings } from "./reminder-settings";
+import { HabitDrawer } from "@/components/habits/habit-drawer";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -38,11 +39,17 @@ export function SystemPage() {
 
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
   const handleEdit = useCallback((habit: Habit) => {
+    setEditingHabit(habit);
+    setDrawerOpen(true);
   }, []);
 
   const handleAdd = useCallback(() => {
+    setEditingHabit(null);
+    setDrawerOpen(true);
   }, []);
 
   const handleClearData = useCallback(() => {
@@ -232,6 +239,12 @@ export function SystemPage() {
           </p>
         </div>
       </SettingsCard>
+
+      <HabitDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        editingHabit={editingHabit}
+      />
     </div>
   );
 }
