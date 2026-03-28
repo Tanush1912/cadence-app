@@ -16,7 +16,7 @@ export function DailyProgressBar({
   const goalMet = percentage >= goal * 100;
 
   return (
-    <div className="px-5 py-3 bg-[#0a0a0a] border-t border-[#1a1a1a]">
+    <div className="px-5 pt-3 pb-16 bg-[#0a0a0a] border-t border-[#1a1a1a]">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-muted-foreground">
           {completed}/{total} completed

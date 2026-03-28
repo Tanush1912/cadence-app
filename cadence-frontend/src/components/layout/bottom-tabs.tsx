@@ -47,7 +47,7 @@ export function BottomTabs({
   onTabChange: (tab: TabId) => void;
 }) {
   return (
-    <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
+    <div className="fixed bottom-3 left-0 right-0 z-50 flex justify-center pointer-events-none">
       <div className="pointer-events-auto">
         <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5 shadow-lg shadow-black/30">
           {TABS.map((tab) => {
