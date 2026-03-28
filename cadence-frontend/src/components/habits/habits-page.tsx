@@ -274,14 +274,14 @@ export function HabitsPage() {
           </div>
         )}
         </div>
-      </div>
 
-      <DailyProgressBar
-        completed={completed}
-        total={total}
-        percentage={percentage}
-        goal={0.7}
-      />
+        <DailyProgressBar
+          completed={completed}
+          total={total}
+          percentage={percentage}
+          goal={0.7}
+        />
+      </div>
 
       {/* Floating check-in button — show when viewing today + habits exist */}
       {isToday(selectedDate) && total > 0 && (
