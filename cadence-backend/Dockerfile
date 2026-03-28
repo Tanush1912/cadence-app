@@ -3,7 +3,7 @@ FROM node:20-slim
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev && npm install typescript tsx
+RUN npm ci && npm install typescript tsx
 
 COPY tsconfig.json ./
 COPY src/ ./src/
