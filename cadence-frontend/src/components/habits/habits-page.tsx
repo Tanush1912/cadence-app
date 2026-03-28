@@ -152,7 +152,14 @@ export function HabitsPage() {
         weekProgress={weekProgress}
       />
 
-      <div className="flex-1 overflow-y-auto">
+      <DailyProgressBar
+        completed={completed}
+        total={total}
+        percentage={percentage}
+        goal={0.7}
+      />
+
+      <div className="flex-1 overflow-y-auto pb-20">
         {/* Streak recovery banner */}
         {isToday(selectedDate) && (
           <div className="px-4 pb-2">
@@ -275,19 +282,13 @@ export function HabitsPage() {
         )}
         </div>
 
-        <DailyProgressBar
-          completed={completed}
-          total={total}
-          percentage={percentage}
-          goal={0.7}
-        />
       </div>
 
       {/* Floating check-in button — show when viewing today + habits exist */}
       {isToday(selectedDate) && total > 0 && (
         <button
           onClick={() => setCheckinOpen(true)}
-          className="fixed bottom-[140px] right-5 w-9 h-9 rounded-full text-[#0a0a0a] shadow-lg flex items-center justify-center transition-colors z-10"
+          className="fixed bottom-[72px] right-5 w-9 h-9 rounded-full text-[#0a0a0a] shadow-lg flex items-center justify-center transition-colors z-10"
           style={{ backgroundColor: "var(--primary)" }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

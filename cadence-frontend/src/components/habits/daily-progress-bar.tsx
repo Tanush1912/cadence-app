@@ -16,26 +16,23 @@ export function DailyProgressBar({
   const goalMet = percentage >= goal * 100;
 
   return (
-    <div className="px-5 pt-3 pb-24 bg-[#0a0a0a]">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted-foreground">
-          {completed}/{total} completed
-        </span>
+    <div className="px-5 pb-2">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500 ease-out"
+            style={{
+              width: `${percentage}%`,
+              backgroundColor: "var(--primary)",
+            }}
+          />
+        </div>
         <span
-          className="text-xs font-medium tabular-nums"
-          style={{ color: goalMet ? "var(--primary)" : "#737373" }}
+          className="text-[11px] font-medium tabular-nums shrink-0"
+          style={{ color: goalMet ? "var(--primary)" : "#525252" }}
         >
-          {percentage}%
+          {completed}/{total}
         </span>
-      </div>
-      <div className="h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
-          style={{
-            width: `${percentage}%`,
-            backgroundColor: "var(--primary)",
-          }}
-        />
       </div>
     </div>
   );
