@@ -51,7 +51,7 @@ jobs:
 
       - name: Alias to custom domain
         if: github.ref == 'refs/heads/main'
-        run: vercel alias set ${{ steps.deploy.outputs.url }} cadence.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel alias set ${{ steps.deploy.outputs.url }} cadence-habit-tracker.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Output deployment URL
         run: echo "Deployed to ${{ steps.deploy.outputs.url }}"

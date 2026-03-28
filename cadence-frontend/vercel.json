@@ -1,5 +1,5 @@
 {
-  "alias": ["cadence.vercel.app"],
+  "alias": ["cadence-habit-tracker.vercel.app"],
   "crons": [
     {
       "path": "/api/reminders",
