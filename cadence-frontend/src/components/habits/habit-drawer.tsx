@@ -104,8 +104,8 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="bg-[#141414] border-[#262626]">
-        <div className="mx-auto w-full max-w-md">
+      <DrawerContent className="bg-[#141414] border-[#262626] max-h-[85dvh]">
+        <div className="mx-auto w-full max-w-md overflow-y-auto">
           <DrawerHeader>
             <DrawerTitle className="text-foreground">
               {isEditing ? "Edit Habit" : "New Habit"}
@@ -124,7 +124,6 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Meditate"
                 className="bg-[#1a1a1a] border-[#262626] text-foreground h-11"
-                autoFocus
               />
             </div>
 
