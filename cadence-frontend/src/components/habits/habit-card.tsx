@@ -47,6 +47,7 @@ export function HabitCard({
   onEdit,
   onArchive,
   onSkip,
+  onCalendar,
   minimumMode,
   nudge,
 }: {
@@ -60,6 +61,7 @@ export function HabitCard({
   onEdit?: (habit: Habit) => void;
   onArchive?: (habit: Habit) => void;
   onSkip?: (habit: Habit) => void;
+  onCalendar?: (habit: Habit) => void;
   minimumMode?: boolean;
   nudge?: import("@/lib/hooks/use-coaching-nudges").CoachingNudge | null;
 }) {
@@ -281,7 +283,10 @@ export function HabitCard({
 
         {/* Mini heatmap — hidden in minimum mode for simplicity */}
         {!minimumMode && (
-          <div className="px-4 pb-4 pt-1">
+          <div
+            className="px-4 pb-4 pt-1 cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
+          >
             <MiniHeatmap data={heatmapData} accentColor={accent} />
           </div>
         )}

@@ -27,6 +27,7 @@ import { SkipDrawer } from "./skip-drawer";
 import { ReflectionDrawer } from "./reflection-drawer";
 import { BundleCard } from "./bundle-card";
 import { StreakRecoveryBanner } from "./streak-recovery-banner";
+import { CalendarDrawer } from "./calendar-drawer";
 import { useCoachingNudges } from "@/lib/hooks/use-coaching-nudges";
 import { useBundles } from "@/lib/hooks/use-bundles";
 import { useNextAction } from "@/lib/hooks/use-next-action";
@@ -67,6 +68,8 @@ export function HabitsPage() {
   const [reflectionOpen, setReflectionOpen] = useState(false);
   const [skipDrawerOpen, setSkipDrawerOpen] = useState(false);
   const [skippingHabit, setSkippingHabit] = useState<Habit | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarHabit, setCalendarHabit] = useState<Habit | null>(null);
 
   const habitIds = useMemo(() => habits.map((h) => h.id), [habits]);
   const heatmapData = useAllHeatmapData(habitIds);
@@ -100,6 +103,11 @@ export function HabitsPage() {
   const handleSkip = useCallback((habit: Habit) => {
     setSkippingHabit(habit);
     setSkipDrawerOpen(true);
+  }, []);
+
+  const handleCalendar = useCallback((habit: Habit) => {
+    setCalendarHabit(habit);
+    setCalendarOpen(true);
   }, []);
 
   const handleAddNew = useCallback(() => {
@@ -263,6 +271,7 @@ export function HabitsPage() {
                 onEdit={handleEdit}
                 onArchive={handleArchive}
                 onSkip={handleSkip}
+                onCalendar={handleCalendar}
                 minimumMode={isMinimumMode}
                 nudge={nudges[habit.id] || null}
               />
@@ -323,6 +332,16 @@ export function HabitsPage() {
         weekSummary={null}
         apiKey={profile.aiKey}
       />
+
+      {calendarHabit && (
+        <CalendarDrawer
+          open={calendarOpen}
+          onOpenChange={setCalendarOpen}
+          habit={calendarHabit}
+          heatmapData={heatmapData[calendarHabit.id] || []}
+          onSelectDate={setSelectedDate}
+        />
+      )}
     </div>
   );
 }

@@ -46,10 +46,14 @@ export function BottomTabs({
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
 }) {
+  // Detect standalone PWA mode — no Safari bar, smaller safe area
+  const isStandalone = typeof window !== "undefined" &&
+    (window.matchMedia("(display-mode: standalone)").matches ||
+     ("standalone" in window.navigator && (window.navigator as Record<string, unknown>).standalone === true));
+
   return (
-    <nav className="bg-[#0a0a0a]">
-      {/* Nav pill — sits above the safe area */}
-      <div className="flex items-center justify-center py-2">
+    <nav className="bg-[#0a0a0a] pb-[env(safe-area-inset-bottom)]">
+      <div className={cn("flex items-center justify-center", isStandalone ? "py-1" : "py-2")}>
         <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -72,8 +76,6 @@ export function BottomTabs({
           })}
         </div>
       </div>
-      {/* Safe area spacer — just background color, no content */}
-      <div className="bg-[#0a0a0a]" style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
     </nav>
   );
 }
