@@ -47,12 +47,9 @@ export function BottomTabs({
   onTabChange: (tab: TabId) => void;
 }) {
   return (
-    <nav
-      className="shrink-0 bg-[#0a0a0a]"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-    >
-      <div className="flex items-center justify-center py-2">
-        <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5">
+    <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
+      <div className="pointer-events-auto">
+        <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5 shadow-lg shadow-black/30">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -74,6 +71,6 @@ export function BottomTabs({
           })}
         </div>
       </div>
-    </nav>
+    </div>
   );
 }

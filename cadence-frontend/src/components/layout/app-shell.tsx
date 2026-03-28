@@ -12,18 +12,18 @@ export function AppShell() {
 
   return (
     <AccentProvider>
-    <div className="fixed inset-0 flex flex-col bg-[#0a0a0a] text-foreground">
-      <main className="flex-1 min-h-0 relative">
-        <div className={activeTab === "habits" ? "h-full overflow-hidden" : "hidden"}>
-          <HabitsPage />
-        </div>
-        <div className={activeTab === "stats" ? "h-full overflow-y-auto" : "hidden"}>
-          <StatsPage />
-        </div>
-        <div className={activeTab === "system" ? "h-full overflow-y-auto" : "hidden"}>
-          <SystemPage />
-        </div>
-      </main>
+    <div className="fixed inset-0 bg-[#0a0a0a] text-foreground">
+      {/* Main content — full screen, nav floats on top */}
+      <div className={activeTab === "habits" ? "h-full overflow-hidden" : "hidden"}>
+        <HabitsPage />
+      </div>
+      <div className={activeTab === "stats" ? "h-full overflow-y-auto" : "hidden"}>
+        <StatsPage />
+      </div>
+      <div className={activeTab === "system" ? "h-full overflow-y-auto" : "hidden"}>
+        <SystemPage />
+      </div>
+      {/* Floating nav — fixed position, not in flex flow */}
       <BottomTabs activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
     </AccentProvider>
