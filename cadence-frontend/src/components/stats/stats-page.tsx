@@ -154,7 +154,7 @@ export function StatsPage() {
             worst on <span className="text-foreground font-medium">{stats.worstDay}</span>
           </p>
         )}
-        {!health.loading && (
+        {!health.loading && health.score >= 0 && (
           <p className="text-sm text-muted-foreground mt-1.5">
             System: <span className="font-mono font-medium" style={{ color: "var(--primary)" }}>{health.score}</span>
             <span className="text-muted-foreground/60"> · {health.status}{health.trend !== "flat" ? (health.trend === "up" ? " ↑" : " ↓") : ""}</span>

@@ -35,6 +35,10 @@ export function useSystemHealth(): SystemHealth {
     const habits = Object.values(rawHabits).filter((h) => !h.archived);
     if (habits.length === 0) return { ...EMPTY, loading: false };
 
+    // Need at least 3 days of log data to compute a meaningful score
+    const logDays = Object.keys(allLogs).length;
+    if (logDays < 3) return { ...EMPTY, loading: false, score: -1 };
+
     const today = todayKey();
 
     let recent7Scheduled = 0;
