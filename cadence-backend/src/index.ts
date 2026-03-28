@@ -1,0 +1,51 @@
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { serve } from "@hono/node-server";
+import cron from "node-cron";
+import transcribe from "./routes/transcribe.js";
+import checkin from "./routes/checkin.js";
+import reminders, { checkAndSendReminders } from "./routes/reminders.js";
+
+const app = new Hono();
+
+app.use(
+  "/api/*",
+  cors({
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+  })
+);
+
+app.get("/api/health", (c) => {
+  return c.json({ status: "ok" });
+});
+
+app.route("/api/transcribe", transcribe);
+app.route("/api/checkin", checkin);
+app.route("/api/reminders", reminders);
+
+
+app.notFound((c) => {
+  return c.json({ error: "Not found" }, 404);
+});
+
+app.onError((err, c) => {
+  console.error("Unhandled error:", err);
+  return c.json({ error: "Internal server error" }, 500);
+});
+
+cron.schedule("* * * * *", () => {
+  checkAndSendReminders().catch(console.error);
+});
+
+const port = parseInt(process.env.PORT ?? "3001", 10);
+
+console.log(`Cadence backend running on http://localhost:${port}`);
+
+serve({
+  fetch: app.fetch,
+  port,
+});
+
+export default app;

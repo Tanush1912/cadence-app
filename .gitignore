@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build
+.next/
+out/
+dist/
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PWA generated
+cadence-frontend/public/sw.js
+cadence-frontend/public/workbox-*.js
+cadence-frontend/public/sw.js.map
