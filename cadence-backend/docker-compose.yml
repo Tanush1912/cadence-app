@@ -1,0 +1,11 @@
+services:
+  cadence-backend:
+    build: .
+    ports:
+      - "3001:3001"
+    volumes:
+      - relay-data:/app/cadence-relay-data
+    restart: unless-stopped
+
+volumes:
+  relay-data:
