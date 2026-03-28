@@ -29,7 +29,7 @@ export function useNextAction(
 
     // 1. All done
     if (totalHabits > 0 && completedCount >= totalHabits) {
-      return { message: "you're on track today" };
+      return { message: "on track today" };
     }
 
     // 2. Booster habit not yet done
@@ -39,7 +39,7 @@ export function useNextAction(
           const targetDone = logs[dep.targetId]?.done;
           if (!targetDone) {
             return {
-              message: `start with ${dep.sourceName.toLowerCase()} — it boosts ${dep.targetName.toLowerCase()}`,
+              message: `${dep.sourceName.toLowerCase()} — supports ${dep.targetName.toLowerCase()}`,
               habitId: dep.sourceId,
             };
           }
@@ -72,7 +72,7 @@ export function useNextAction(
       if (priorRate >= 50 && (priorRate - recentRate) >= 20) {
         const floorHint = h.floor ? ` — ${h.floor} is enough` : "";
         return {
-          message: `${h.name.toLowerCase()} is slipping${floorHint}`,
+          message: `${h.name.toLowerCase()} slipping${floorHint}`,
           habitId: h.id,
         };
       }
@@ -83,7 +83,7 @@ export function useNextAction(
       const morningHabit = scheduled.find((h) => h.group === "morning" && !logs[h.id]?.done);
       if (morningHabit) {
         return {
-          message: `start your morning — ${morningHabit.name.toLowerCase()}`,
+          message: `morning — ${morningHabit.name.toLowerCase()}`,
           habitId: morningHabit.id,
         };
       }
@@ -93,7 +93,7 @@ export function useNextAction(
       const eveningHabit = scheduled.find((h) => h.group === "evening" && !logs[h.id]?.done);
       if (eveningHabit) {
         return {
-          message: `evening — ${eveningHabit.name.toLowerCase()} left`,
+          message: `evening — ${eveningHabit.name.toLowerCase()}`,
           habitId: eveningHabit.id,
         };
       }

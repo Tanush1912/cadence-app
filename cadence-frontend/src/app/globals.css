@@ -112,3 +112,17 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* ── Opacity scale system ── */
+@layer utilities {
+  /* Primary text — full weight */
+  .text-primary-weight { opacity: 1; }
+  /* Secondary text — labels, floor text */
+  .text-secondary-weight { opacity: 0.7; }
+  /* Muted text — nudges, hints */
+  .text-muted-weight { opacity: 0.5; }
+  /* Disabled / background — inactive */
+  .text-disabled-weight { opacity: 0.3; }
+  /* Completed state — slightly dimmed */
+  .text-done-weight { opacity: 0.55; }
+}

@@ -8,10 +8,15 @@ import reminders, { checkAndSendReminders } from "./routes/reminders.js";
 
 const app = new Hono();
 
+const ALLOWED_ORIGINS = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
 app.use(
   "/api/*",
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: ALLOWED_ORIGINS,
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type"],
   })
@@ -43,9 +48,16 @@ const port = parseInt(process.env.PORT ?? "3001", 10);
 
 console.log(`Cadence backend running on http://localhost:${port}`);
 
-serve({
+const server = serve({
   fetch: app.fetch,
   port,
 });
+
+// Gun relay — attaches WebSocket server to the same HTTP server.
+// Data persists to disk in ./cadence-relay-data via Radisk.
+// Frontend peers connect to ws://localhost:3001/gun for sync.
+import Gun from "gun";
+Gun({ web: server, file: "cadence-relay-data" });
+console.log("Gun relay active on ws://localhost:" + port + "/gun");
 
 export default app;

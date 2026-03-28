@@ -241,11 +241,11 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
         </div>
       </div>
 
-      {/* Root Causes */}
+      {/* Changing — behavioral patterns */}
       {rootCauses.length > 0 && (
         <div className="px-5 mb-8">
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Root Causes
+            Changing
           </h2>
           <div className="space-y-1">
             {rootCauses.map((cause, i) => (
@@ -276,15 +276,15 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
         </div>
       )}
 
-      {/* Keystone habits */}
+      {/* Helps — keystone habits */}
       {stats.keystoneHabits.length > 0 && (
         <div className="px-5 mb-8">
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Keystone Habits
+            Helps
           </h2>
           <div className="bg-[#141414] rounded-2xl border border-[#262626] p-4 space-y-3">
             <p className="text-[11px] text-muted-foreground/60">
-              Habits that boost everything else when done
+              These boost everything else when done
             </p>
             {stats.keystoneHabits.map((k) => (
               <div key={k.id} className="flex items-center gap-3">
@@ -312,7 +312,7 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
           {boosters.length > 0 && (
             <div className="mb-4">
               <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide mb-1.5 px-3">
-                Boosters
+                Helps
               </p>
               <div className="space-y-1">
                 {boosters.map((dep) => (
@@ -328,7 +328,7 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground/60 mt-1 ml-[calc(16px+0.5rem)]">
-                      tends to increase &middot; {dep.suggestion}
+                      {dep.suggestion}
                     </p>
                   </div>
                 ))}
@@ -338,7 +338,7 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
           {breakers.length > 0 && (
             <div>
               <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide mb-1.5 px-3">
-                Breakers
+                Hurts
               </p>
               <div className="space-y-1">
                 {breakers.map((dep) => (
@@ -354,7 +354,7 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground/60 mt-1 ml-[calc(16px+0.5rem)]">
-                      tends to decrease &middot; {dep.suggestion}
+                      {dep.suggestion}
                     </p>
                   </div>
                 ))}

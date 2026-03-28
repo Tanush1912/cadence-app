@@ -21,7 +21,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
   const { profile } = useProfile();
   const { isRecording, isSupported, startRecording, stopRecording, error: recorderError } = useVoiceRecorder();
 
-  const [expanded, setExpanded] = useState(() => new Date().getHours() >= 18);
+  const [expanded, setExpanded] = useState(false);
   const [text, setText] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [showMood, setShowMood] = useState(false);
@@ -178,8 +178,8 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
             key="collapsed"
             onClick={() => setExpanded(true)}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-colors text-left",
-              "bg-[#111111] border-[#1a1a1a] hover:border-[#262626]"
+              "w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-colors text-left",
+              "bg-[#0e0e0e] border-[#181818] hover:border-[#222222]"
             )}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -202,7 +202,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
                 </span>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground/60">
+              <span className="text-sm text-muted-foreground/40">
                 How was today?
               </span>
             )}
@@ -210,7 +210,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
         ) : (
           <motion.div
             key="expanded"
-            className="bg-[#111111] rounded-2xl border border-[#1a1a1a] overflow-hidden"
+            className="bg-[#0e0e0e] rounded-2xl border border-[#181818] overflow-hidden"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}

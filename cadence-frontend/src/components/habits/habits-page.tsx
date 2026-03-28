@@ -210,10 +210,11 @@ export function HabitsPage() {
           </div>
         )}
 
-        {/* Next best action — replaces focus card */}
+        {/* Next best action — the system speaking */}
         {isToday(selectedDate) && nextAction && !isMinimumMode && (
-          <div className="px-5 pb-2">
-            <p className="text-[13px]" style={{ color: "var(--primary)" }}>
+          <div className="px-5 py-3 mb-1">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/30 mb-1">next</p>
+            <p className="text-[15px] font-medium tracking-tight" style={{ color: "var(--primary)" }}>
               {nextAction.message}
             </p>
           </div>
@@ -224,7 +225,7 @@ export function HabitsPage() {
           <div className="px-4 pb-2">
             <div className="px-3 py-2 rounded-xl bg-amber-500/5 border border-amber-500/10">
               <p className="text-[11px] text-amber-400/70">
-                simplified — your system needs a reset
+                simplified — focus on minimum
               </p>
             </div>
           </div>
@@ -259,7 +260,7 @@ export function HabitsPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {filteredHabits.map((habit) => (
               <HabitCard
                 key={habit.id}

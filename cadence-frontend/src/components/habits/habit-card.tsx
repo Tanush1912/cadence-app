@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate, useAnimationControls } from "framer-motion";
 import { useDrag } from "@use-gesture/react";
 import { cn } from "@/lib/utils";
 import { MiniHeatmap } from "./mini-heatmap";
@@ -72,6 +72,7 @@ export function HabitCard({
   const accent = habitColor;
   const hexColor = COLOR_MAP[habitColor] || COLOR_MAP.teal;
   const [showActions, setShowActions] = useState(false);
+  const checkControls = useAnimationControls();
 
   const handleFrictionCommit = useCallback(
     (score: FrictionScore) => onFriction(habit.id, score),
@@ -83,9 +84,16 @@ export function HabitCard({
   const handleToggle = useCallback(() => {
     if (!editable) return;
     const nowDone = onToggle(habit.id);
-    if (nowDone) friction.show();
-    else friction.reset();
-  }, [editable, onToggle, habit.id, friction]);
+    if (nowDone) {
+      friction.show();
+      checkControls.start({
+        scale: [1, 0.85, 1.15, 1],
+        transition: { duration: 0.35, ease: "easeOut" },
+      });
+    } else {
+      friction.reset();
+    }
+  }, [editable, onToggle, habit.id, friction, checkControls]);
 
   const x = useMotionValue(0);
   const dragRef = useRef<HTMLDivElement>(null);
@@ -183,12 +191,13 @@ export function HabitCard({
         ref={dragRef}
         style={{ x, touchAction: "pan-y" }}
         className={cn(
-          "relative bg-[#141414] rounded-2xl border border-[#262626] overflow-hidden cursor-grab active:cursor-grabbing",
-          skipped && !done && "opacity-60"
+          "relative bg-[#141414] rounded-2xl border border-[#262626] overflow-hidden cursor-grab active:cursor-grabbing transition-opacity duration-300",
+          skipped && !done && "opacity-60",
+          done && !skipped && "opacity-[0.55]"
         )}
       >
         {/* Top section */}
-        <div className="flex items-center gap-3 px-4 py-3.5">
+        <div className="flex items-center gap-3 px-4 py-3">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
             style={{ backgroundColor: `${hexColor}15`, color: hexColor }}
@@ -198,21 +207,21 @@ export function HabitCard({
           <div className="flex-1 min-w-0">
             {minimumMode ? (
               <>
-                <h3 className="text-[15px] font-semibold truncate text-amber-300/90">{habit.floor}</h3>
-                <p className="text-xs text-muted-foreground/60 truncate">{habit.name}</p>
+                <h3 className="text-[15px] font-bold truncate text-amber-300/90">{habit.floor}</h3>
+                <p className="text-[11px] text-muted-foreground/50 truncate">{habit.name}</p>
               </>
             ) : (
               <>
-                <h3 className="text-[15px] font-semibold truncate">{habit.name}</h3>
+                <h3 className="text-[15px] font-bold tracking-tight truncate">{habit.name}</h3>
                 {nudge ? (
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {(nudge.type === "personal-best" || nudge.type === "consistent") ? (
-                      <span className="text-[11px] font-medium" style={{ color: "var(--primary)" }}>
+                      <span className="text-[11px] font-medium opacity-70" style={{ color: "var(--primary)" }}>
                         {nudge.message}
                       </span>
                     ) : nudge.type === "dropped" ? (
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-muted-foreground/50">{nudge.message}</span>
+                        <span className="text-[11px] text-muted-foreground/40">{nudge.message}</span>
                         {nudge.actions?.map((a) => (
                           <button
                             key={a.label}
@@ -220,7 +229,7 @@ export function HabitCard({
                               e.stopPropagation();
                               if (a.type === "archive") onArchive?.(habit);
                             }}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-[#1a1a1a] text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-[#1a1a1a] text-muted-foreground/50 hover:text-foreground transition-colors"
                           >
                             {a.label}
                           </button>
@@ -228,7 +237,7 @@ export function HabitCard({
                       </div>
                     ) : (
                       <span
-                        className="text-[11px] text-muted-foreground/50 cursor-pointer hover:text-muted-foreground transition-colors"
+                        className="text-[11px] text-muted-foreground/40 cursor-pointer hover:text-muted-foreground transition-colors"
                         onClick={(e) => { e.stopPropagation(); onEdit?.(habit); }}
                       >
                         {nudge.message}
@@ -236,7 +245,7 @@ export function HabitCard({
                     )}
                   </div>
                 ) : habit.floor ? (
-                  <p className="text-xs text-muted-foreground truncate">{habit.floor}</p>
+                  <p className="text-[11px] text-muted-foreground/50 truncate">{habit.floor}</p>
                 ) : null}
               </>
             )}
@@ -267,6 +276,7 @@ export function HabitCard({
                   !editable && "opacity-40 cursor-not-allowed"
                 )}
                 style={done ? { backgroundColor: "var(--primary)" } : undefined}
+                animate={checkControls}
                 whileTap={editable ? { scale: 0.92 } : undefined}
               >
                 <svg
@@ -284,7 +294,7 @@ export function HabitCard({
         {/* Mini heatmap — hidden in minimum mode for simplicity */}
         {!minimumMode && (
           <div
-            className="px-4 pb-4 pt-1 cursor-pointer"
+            className="px-4 pb-3 pt-0.5 cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
           >
             <MiniHeatmap data={heatmapData} accentColor={accent} />
