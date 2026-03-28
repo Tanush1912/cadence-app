@@ -54,4 +54,4 @@ jobs:
         run: vercel alias set ${{ steps.deploy.outputs.url }} cadence.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Output deployment URL
-        run: echo "Deployed to ${{ steps.deploy.outputs.url }} (alias: cadence.vercel.app)"
+        run: echo "Deployed to ${{ steps.deploy.outputs.url }}"
