@@ -116,7 +116,7 @@ function Heatmap({ cells, daysTracked, avgCompletion }: {
   );
 }
 
-export function StatsPage() {
+export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
   const stats = useStats();
   const health = useSystemHealth();
   const { causes: rootCauses } = useRootCauses();
@@ -141,7 +141,7 @@ export function StatsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto pb-20">
+    <div className="h-full overflow-y-auto pb-24">
       <header className="px-5 pb-1" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
         <h1 className="text-xl font-semibold tracking-tight">Stats</h1>
       </header>
@@ -173,6 +173,15 @@ export function StatsPage() {
             System: <span className="font-mono font-medium" style={{ color: "var(--primary)" }}>{health.score}</span>
             <span className="text-muted-foreground/60"> · {health.status}{health.trend !== "flat" ? (health.trend === "up" ? " ↑" : " ↓") : ""}</span>
           </p>
+        )}
+        {onReflect && (
+          <button
+            onClick={onReflect}
+            className="mt-3 text-xs font-medium transition-colors"
+            style={{ color: "var(--primary)" }}
+          >
+            Reflect on this week →
+          </button>
         )}
       </div>
 
