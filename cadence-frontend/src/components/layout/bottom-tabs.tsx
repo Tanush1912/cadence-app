@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/utils/haptics";
 
 const TABS = [
   {
@@ -47,15 +48,15 @@ export function BottomTabs({
   onTabChange: (tab: TabId) => void;
 }) {
   return (
-    <div className="fixed bottom-3 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+    <div className="fixed z-50 flex justify-center px-4 pointer-events-none left-0 right-0" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
       <div className="pointer-events-auto">
-        <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5 shadow-lg shadow-black/30">
+        <div className="flex items-center gap-1 bg-[#1a1a1a]/90 backdrop-blur-lg rounded-full px-2 py-1.5 shadow-lg shadow-black/30">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => { haptic("light"); onTabChange(tab.id); }}
                 className={cn(
                   "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all",
                   isActive

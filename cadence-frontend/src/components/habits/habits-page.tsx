@@ -159,7 +159,7 @@ export function HabitsPage() {
         goal={0.7}
       />
 
-      <div className="flex-1 overflow-y-auto pb-20">
+      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
         {/* Streak recovery banner */}
         {isToday(selectedDate) && (
           <div className="px-4 pb-2">
@@ -289,8 +289,8 @@ export function HabitsPage() {
       {isToday(selectedDate) && total > 0 && (
         <button
           onClick={() => setCheckinOpen(true)}
-          className="fixed bottom-[72px] right-5 w-9 h-9 rounded-full text-[#0a0a0a] shadow-lg flex items-center justify-center transition-colors z-10"
-          style={{ backgroundColor: "var(--primary)" }}
+          className="fixed right-5 w-9 h-9 rounded-full text-[#0a0a0a] shadow-lg flex items-center justify-center transition-colors z-10"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 64px)", backgroundColor: "var(--primary)" }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />

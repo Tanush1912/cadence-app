@@ -6,6 +6,7 @@ import { useGun } from "@/lib/gun/gun-provider";
 import { useSharedData } from "@/lib/gun/data-provider";
 import { HabitIcon } from "@/lib/utils/habit-icons";
 import type { Habit } from "@/lib/types";
+import { haptic } from "@/lib/utils/haptics";
 
 const QUICK_REASONS = ["Tired", "Busy", "Sick", "Rest day", "Not relevant"];
 
@@ -50,6 +51,7 @@ export function SkipDrawer({
 
     gun.get("logs").get(dateKey).get(habit.id).put(logData);
     updateLog(dateKey, habit.id, logData);
+    haptic("medium");
 
     setReason("");
     setSelectedChip(null);
@@ -106,7 +108,7 @@ export function SkipDrawer({
                 setReason(e.target.value);
                 setSelectedChip(null);
               }}
-              className="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[#363636] mb-4"
+              className="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[#363636] mb-4"
             />
 
             {/* Quick reason chips */}

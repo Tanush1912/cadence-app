@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/utils/haptics";
 import type { Mood } from "@/lib/types";
 
 const MOODS: { value: Mood; emoji: string; label: string }[] = [
@@ -23,7 +24,7 @@ export function MoodPicker({
       {MOODS.map((m) => (
         <button
           key={m.value}
-          onClick={() => onSelect(selected === m.value ? null : m.value)}
+          onClick={() => { haptic("light"); onSelect(selected === m.value ? null : m.value); }}
           className={cn(
             "w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all",
             selected === m.value

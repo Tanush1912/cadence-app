@@ -236,7 +236,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
                 onBlur={handleBlur}
                 placeholder="write a quick note (or speak)"
                 rows={2}
-                className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 resize-none outline-none pr-10"
+                className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/40 resize-none outline-none pr-10"
                 style={{ minHeight: "48px", maxHeight: "144px" }}
               />
               {showMic && (

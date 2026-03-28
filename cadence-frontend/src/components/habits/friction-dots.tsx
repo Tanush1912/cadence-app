@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/utils/haptics";
 
 const DOT_CONFIG = [
   { score: 1 as const, color: "bg-terminal-green", label: "easy" },
@@ -33,6 +34,7 @@ export function FrictionDots({
               tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
+                haptic("light");
                 onSelect(dot.score);
               }}
               onKeyDown={(e) => {

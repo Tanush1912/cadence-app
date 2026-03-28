@@ -184,7 +184,7 @@ export function CheckinDrawer({ open, onOpenChange, habits, dateKey }: CheckinDr
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="bg-[#141414] border-[#262626] max-h-[85svh]">
+      <DrawerContent className="bg-[#141414] border-[#262626] max-h-[85dvh]">
         <div className="mx-auto w-full max-w-md pb-8">
           <DrawerHeader>
             <DrawerTitle className="text-foreground">Check in</DrawerTitle>

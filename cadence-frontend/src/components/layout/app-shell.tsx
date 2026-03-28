@@ -16,14 +16,14 @@ export function AppShell() {
 
   return (
     <AccentProvider>
-    <div className="fixed inset-0 bg-[#0a0a0a] text-foreground">
-      <div className={activeTab === "habits" ? "h-full overflow-hidden" : "hidden"}>
+    <div className="min-h-[100dvh] bg-[#0a0a0a] text-foreground">
+      <div className={activeTab === "habits" ? "h-[100dvh] overflow-hidden" : "hidden"}>
         <HabitsPage />
       </div>
-      <div className={activeTab === "stats" ? "h-full overflow-y-auto" : "hidden"}>
+      <div className={activeTab === "stats" ? "min-h-[100dvh]" : "hidden"}>
         <StatsPage onReflect={() => setReflectionOpen(true)} />
       </div>
-      <div className={activeTab === "system" ? "h-full overflow-y-auto" : "hidden"}>
+      <div className={activeTab === "system" ? "min-h-[100dvh]" : "hidden"}>
         <SystemPage />
       </div>
       <BottomTabs activeTab={activeTab} onTabChange={setActiveTab} />

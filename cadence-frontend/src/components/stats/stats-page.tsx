@@ -140,7 +140,7 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
   }
 
   return (
-    <div className="h-full overflow-y-auto pb-20">
+    <div className="h-full overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
       <header className="px-5 pb-1" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
         <h1 className="text-xl font-semibold tracking-tight">Stats</h1>
       </header>

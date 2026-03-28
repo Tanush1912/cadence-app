@@ -9,6 +9,7 @@ import { FrictionDots } from "./friction-dots";
 import { HabitIcon } from "@/lib/utils/habit-icons";
 import { useFriction } from "@/lib/hooks/use-friction";
 import { isEditable } from "@/lib/utils/dates";
+import { haptic } from "@/lib/utils/haptics";
 import type { Habit, Log, Streak, FrictionScore } from "@/lib/types";
 
 const ACCENT_COLORS: Record<string, string> = {
@@ -86,11 +87,13 @@ export function HabitCard({
     const nowDone = onToggle(habit.id);
     if (nowDone) {
       friction.show();
+      haptic("success");
       checkControls.start({
         scale: [1, 0.85, 1.15, 1],
         transition: { duration: 0.35, ease: "easeOut" },
       });
     } else {
+      haptic("light");
       friction.reset();
     }
   }, [editable, onToggle, habit.id, friction, checkControls]);
@@ -114,7 +117,7 @@ export function HabitCard({
       } else {
         if (mx > SWIPE_THRESHOLD && editable) {
           handleToggle();
-          if (navigator.vibrate) navigator.vibrate(10);
+          haptic("success");
         }
         if (mx < -SWIPE_THRESHOLD) {
           setShowActions(true);

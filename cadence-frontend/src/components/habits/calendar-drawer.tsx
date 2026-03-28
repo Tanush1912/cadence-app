@@ -179,7 +179,7 @@ export function CalendarDrawer({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-[#141414] border-t border-[#262626]"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-[#141414] border-t border-[#262626]"
           >
             <div className="mx-auto mt-3 h-1 w-[60px] rounded-full bg-[#333]" />
 

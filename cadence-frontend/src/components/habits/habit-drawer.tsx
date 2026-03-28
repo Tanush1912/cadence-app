@@ -104,7 +104,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="bg-[#141414] border-[#262626] max-h-[85svh]">
+      <DrawerContent className="bg-[#141414] border-[#262626] max-h-[85dvh]">
         <div className="mx-auto w-full max-w-md overflow-y-auto">
           <DrawerHeader>
             <DrawerTitle className="text-foreground">

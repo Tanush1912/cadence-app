@@ -42,7 +42,7 @@ export function SearchDrawer({ open, onOpenChange }: SearchDrawerProps) {
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="bg-[#0a0a0a] border-[#262626] max-h-[85svh]">
+      <DrawerContent className="bg-[#0a0a0a] border-[#262626] max-h-[85dvh]">
         <DrawerHeader className="pb-2">
           <DrawerTitle className="sr-only">Search</DrawerTitle>
           {/* Search input */}
@@ -67,7 +67,7 @@ export function SearchDrawer({ open, onOpenChange }: SearchDrawerProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search habits, journal, tags..."
-              className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#141414] border border-[#262626] text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-[#363636] transition-colors"
+              className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#141414] border border-[#262626] text-base text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-[#363636] transition-colors"
             />
             {hasQuery && (
               <button

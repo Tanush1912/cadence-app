@@ -77,7 +77,7 @@ export function SystemPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4 px-4 pb-20" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)" }}>
+    <div className="mx-auto w-full max-w-lg space-y-4 px-4" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
       <h1 className="text-lg font-semibold text-[#fafafa]">Settings</h1>
 
       {/* Habits */}

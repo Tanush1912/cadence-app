@@ -240,12 +240,12 @@ ${conversationMessages.map((m) => `${m.role === "user" ? "User" : "Coach"}: ${m.
 
   return (
     <Drawer open={open} onOpenChange={handleClose}>
-      <DrawerContent className="bg-[#141414] border-[#262626] h-[85svh]">
-        <DrawerHeader>
+      <DrawerContent className="bg-[#141414] border-[#262626] h-[85dvh] flex flex-col">
+        <DrawerHeader className="shrink-0">
           <DrawerTitle className="text-foreground">Weekly Reflection</DrawerTitle>
         </DrawerHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 space-y-3 pb-4">
           {displayMessages.length === 0 && !loading && (
             <p className="text-sm text-muted-foreground text-center py-8">
               {apiKey
@@ -289,7 +289,7 @@ ${conversationMessages.map((m) => `${m.role === "user" ? "User" : "Coach"}: ${m.
               <textarea
                 value={patternDraft}
                 onChange={(e) => setPatternDraft(e.target.value.slice(0, 200))}
-                className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-sm text-foreground resize-none focus:outline-none focus:border-[#555]"
+                className="w-full bg-[#0f0f0f] border border-[#333] rounded-lg px-3 py-2 text-base text-foreground resize-none focus:outline-none focus:border-[#555]"
                 rows={3}
                 maxLength={200}
                 placeholder="e.g. skips journal when mornings are rushed"
@@ -321,7 +321,7 @@ ${conversationMessages.map((m) => `${m.role === "user" ? "User" : "Coach"}: ${m.
         </div>
 
         {!showSavePrompt && (
-          <div className="px-4 pb-6 pt-2 border-t border-[#262626]">
+          <div className="px-4 pt-2 border-t border-[#262626] shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
             <div className="flex gap-2">
               <Input
                 value={input}
