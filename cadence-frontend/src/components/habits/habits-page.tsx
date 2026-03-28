@@ -24,7 +24,11 @@ import { useExperiments } from "@/lib/hooks/use-experiments";
 import { ExperimentCard } from "./experiment-card";
 import { SearchDrawer } from "./search-drawer";
 import { SkipDrawer } from "./skip-drawer";
+import { ReflectionDrawer } from "./reflection-drawer";
+import { BundleCard } from "./bundle-card";
+import { StreakRecoveryBanner } from "./streak-recovery-banner";
 import { useCoachingNudges } from "@/lib/hooks/use-coaching-nudges";
+import { useBundles } from "@/lib/hooks/use-bundles";
 import { isToday, todayKey } from "@/lib/utils/dates";
 import type { Habit, GroupName, FrictionScore } from "@/lib/types";
 
@@ -40,6 +44,7 @@ export function HabitsPage() {
   const { activeExperiment, isExpired, endExperiment } = useExperiments();
   const { habits: rawHabits } = useSharedData();
   const nudges = useCoachingNudges();
+  const { bundles } = useBundles();
 
   const isMinimumMode = !!(profile.minimumMode && profile.minimumModeDate === todayKey());
   const toggleMinimumMode = useCallback(() => {
@@ -55,6 +60,7 @@ export function HabitsPage() {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [reflectionOpen, setReflectionOpen] = useState(false);
   const [skipDrawerOpen, setSkipDrawerOpen] = useState(false);
   const [skippingHabit, setSkippingHabit] = useState<Habit | null>(null);
 
@@ -137,10 +143,41 @@ export function HabitsPage() {
       />
 
       <div className="flex-1 overflow-y-auto">
+        {/* Streak recovery banner */}
+        {isToday(selectedDate) && (
+          <StreakRecoveryBanner
+            onDismiss={() => {}}
+            recoveriesUsed={0}
+            maxRecoveries={2}
+          />
+        )}
+
         {/* Journal — above habits */}
         <div className="px-4 pb-2">
           <JournalCard dateKey={selectedDate} />
         </div>
+
+        {/* Bundles — one-tap complete */}
+        {isToday(selectedDate) && Object.keys(bundles).length > 0 && (
+          <div className="px-4 pb-2 space-y-2">
+            {Object.values(bundles).map((b) => {
+              const ids = b.habitIds.split(",").filter(Boolean);
+              const names: Record<string, string> = {};
+              ids.forEach((id) => { if (rawHabits[id]) names[id] = rawHabits[id].name; });
+              const completed = new Set(ids.filter((id) => logs[id]?.done));
+              return (
+                <BundleCard
+                  key={b.id}
+                  bundleName={b.name}
+                  habitIds={ids}
+                  habitNames={names}
+                  completedHabitIds={completed}
+                  onComplete={() => {}}
+                />
+              );
+            })}
+          </div>
+        )}
 
         {/* Active experiment */}
         {activeExperiment && rawHabits[activeExperiment.habitId] && (
@@ -256,6 +293,13 @@ export function HabitsPage() {
         habit={skippingHabit}
         dateKey={selectedDate}
         onOpenChange={setSkipDrawerOpen}
+      />
+
+      <ReflectionDrawer
+        open={reflectionOpen}
+        onOpenChange={setReflectionOpen}
+        weekSummary={null}
+        apiKey={profile.aiKey}
       />
     </div>
   );

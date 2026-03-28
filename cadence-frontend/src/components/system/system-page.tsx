@@ -8,6 +8,7 @@ import { useExport } from "@/lib/hooks/use-export";
 import { SettingsCard } from "./settings-card";
 import { HabitListEditor } from "./habit-list-editor";
 import { ExperimentCreator } from "./experiment-creator";
+import { BundleEditor } from "./bundle-editor";
 import { ReminderSettings } from "./reminder-settings";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -76,6 +77,10 @@ export function SystemPage() {
       <SettingsCard title="Habits">
         <HabitListEditor onEdit={handleEdit} onAdd={handleAdd} />
       </SettingsCard>
+
+      {/* Experiments */}
+      {/* Bundles */}
+      <BundleEditor />
 
       {/* Experiments */}
       <ExperimentCreator />
