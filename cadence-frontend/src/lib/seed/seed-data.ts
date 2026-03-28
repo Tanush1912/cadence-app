@@ -49,8 +49,7 @@ function generateLogs(daysBack: number) {
   return logs;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function seedIfEmpty(gun: any) {
+export async function seedIfEmpty(gun: import("@/lib/gun/types").GunInstance) {
   if (!gun) return;
 
   return new Promise<void>((resolve) => {

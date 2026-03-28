@@ -1,9 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type GunInstance = any;
+import type { GunInstance } from "./types";
 
 const GunContext = createContext<GunInstance | null>(null);
 
@@ -13,7 +11,7 @@ export function GunProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     import("./gun-client").then(({ getGun }) => {
       const instance = getGun();
-      setGun(instance);
+      setGun(instance as GunInstance | null);
     });
   }, []);
 

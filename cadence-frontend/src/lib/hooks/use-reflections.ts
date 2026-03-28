@@ -77,11 +77,10 @@ export function useReflections(): UseReflectionsReturn {
 
     const node = gun.get("reflections");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    node.map().on((raw: any, key: string) => {
+    node.map().on((raw: Record<string, unknown> | null, key: string) => {
       if (!raw || !weekKeys.current.includes(key)) return;
 
-      const cleaned = stripGunMeta(raw as Record<string, unknown>);
+      const cleaned = stripGunMeta(raw);
       if (cleaned.summary && typeof cleaned.summary === "string") {
         accumulator.current[key] = {
           summary: cleaned.summary as string,

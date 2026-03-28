@@ -174,9 +174,8 @@ export function HabitCard({
       </motion.div>
 
       {/* Main card — draggable */}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <motion.div
-        {...(bind() as any)}
+        {...(bind() as unknown as Record<string, unknown>)}
         ref={dragRef}
         style={{ x, touchAction: "pan-y" }}
         className={cn(

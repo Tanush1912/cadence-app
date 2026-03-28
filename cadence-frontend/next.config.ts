@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
+  turbopack: {},
   webpack: (config) => {
     config.resolve = {
       ...config.resolve,
