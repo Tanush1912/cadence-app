@@ -3,6 +3,7 @@
 import { useStats, type DayCell } from "@/lib/hooks/use-stats";
 import { useSystemHealth } from "@/lib/hooks/use-system-health";
 import { useRootCauses } from "@/lib/hooks/use-root-causes";
+import { useHabitDependencies } from "@/lib/hooks/use-habit-dependencies";
 import { cn } from "@/lib/utils";
 import { HabitIcon } from "@/lib/utils/habit-icons";
 import { HealthRing } from "./health-ring";
@@ -117,6 +118,7 @@ export function StatsPage() {
   const stats = useStats();
   const health = useSystemHealth();
   const { causes: rootCauses } = useRootCauses();
+  const { boosters, breakers } = useHabitDependencies();
 
   if (stats.loading) {
     return (
@@ -270,6 +272,67 @@ export function StatsPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Connections */}
+      {(boosters.length > 0 || breakers.length > 0) && (
+        <div className="px-5 mb-8">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+            Connections
+          </h2>
+          {boosters.length > 0 && (
+            <div className="mb-4">
+              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide mb-1.5 px-3">
+                Boosters
+              </p>
+              <div className="space-y-1">
+                {boosters.map((dep) => (
+                  <div key={`${dep.sourceId}-${dep.targetId}`} className="px-3 py-2.5 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground"><HabitIcon name={dep.sourceName} size={16} /></span>
+                      <span className="text-sm">{dep.sourceName}</span>
+                      <span className="text-xs text-muted-foreground">{"\u2192"}</span>
+                      <span className="text-sm text-muted-foreground"><HabitIcon name={dep.targetName} size={16} /></span>
+                      <span className="text-sm flex-1">{dep.targetName}</span>
+                      <span className="text-xs font-mono" style={{ color: "var(--primary)" }}>
+                        +{dep.impact}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground/60 mt-1 ml-[calc(16px+0.5rem)]">
+                      tends to increase &middot; {dep.suggestion}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {breakers.length > 0 && (
+            <div>
+              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide mb-1.5 px-3">
+                Breakers
+              </p>
+              <div className="space-y-1">
+                {breakers.map((dep) => (
+                  <div key={`${dep.sourceId}-${dep.targetId}`} className="px-3 py-2.5 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground"><HabitIcon name={dep.sourceName} size={16} /></span>
+                      <span className="text-sm">{dep.sourceName}</span>
+                      <span className="text-xs text-muted-foreground">{"\u2192"}</span>
+                      <span className="text-sm text-muted-foreground"><HabitIcon name={dep.targetName} size={16} /></span>
+                      <span className="text-sm flex-1">{dep.targetName}</span>
+                      <span className="text-xs font-mono text-red-400/70">
+                        {dep.impact}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground/60 mt-1 ml-[calc(16px+0.5rem)]">
+                      tends to decrease &middot; {dep.suggestion}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

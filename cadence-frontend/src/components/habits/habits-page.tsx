@@ -24,6 +24,7 @@ import { useExperiments } from "@/lib/hooks/use-experiments";
 import { ExperimentCard } from "./experiment-card";
 import { SearchDrawer } from "./search-drawer";
 import { SkipDrawer } from "./skip-drawer";
+import { useCoachingNudges } from "@/lib/hooks/use-coaching-nudges";
 import { isToday, todayKey } from "@/lib/utils/dates";
 import type { Habit, GroupName, FrictionScore } from "@/lib/types";
 
@@ -38,6 +39,7 @@ export function HabitsPage() {
   const focusHabit = useFocusHabit(selectedDate);
   const { activeExperiment, isExpired, endExperiment } = useExperiments();
   const { habits: rawHabits } = useSharedData();
+  const nudges = useCoachingNudges();
 
   const isMinimumMode = !!(profile.minimumMode && profile.minimumModeDate === todayKey());
   const toggleMinimumMode = useCallback(() => {
@@ -203,6 +205,7 @@ export function HabitsPage() {
                 onArchive={handleArchive}
                 onSkip={handleSkip}
                 minimumMode={isMinimumMode}
+                nudge={nudges[habit.id] || null}
               />
             ))}
           </div>

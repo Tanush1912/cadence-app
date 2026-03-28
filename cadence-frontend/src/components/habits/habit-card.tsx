@@ -48,6 +48,7 @@ export function HabitCard({
   onArchive,
   onSkip,
   minimumMode,
+  nudge,
 }: {
   habit: Habit;
   log: Log | undefined;
@@ -60,6 +61,7 @@ export function HabitCard({
   onArchive?: (habit: Habit) => void;
   onSkip?: (habit: Habit) => void;
   minimumMode?: boolean;
+  nudge?: import("@/lib/hooks/use-coaching-nudges").CoachingNudge | null;
 }) {
   const done = log?.done ?? false;
   const skipped = log?.skipped ?? false;
@@ -200,9 +202,40 @@ export function HabitCard({
             ) : (
               <>
                 <h3 className="text-[15px] font-semibold truncate">{habit.name}</h3>
-                {habit.floor && (
+                {nudge ? (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {(nudge.type === "personal-best" || nudge.type === "consistent") ? (
+                      <span className="text-[11px] font-medium" style={{ color: "var(--primary)" }}>
+                        {nudge.message}
+                      </span>
+                    ) : nudge.type === "dropped" ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-muted-foreground/50">{nudge.message}</span>
+                        {nudge.actions?.map((a) => (
+                          <button
+                            key={a.label}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (a.type === "archive") onArchive?.(habit);
+                            }}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-[#1a1a1a] text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {a.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <span
+                        className="text-[11px] text-muted-foreground/50 cursor-pointer hover:text-muted-foreground transition-colors"
+                        onClick={(e) => { e.stopPropagation(); onEdit?.(habit); }}
+                      >
+                        {nudge.message}
+                      </span>
+                    )}
+                  </div>
+                ) : habit.floor ? (
                   <p className="text-xs text-muted-foreground truncate">{habit.floor}</p>
-                )}
+                ) : null}
               </>
             )}
           </div>
