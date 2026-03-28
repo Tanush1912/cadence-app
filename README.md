@@ -1,71 +1,84 @@
 # Cadence
 
-A personal habit tracking PWA that turns raw behavior data into actionable insights. Built with Next.js and GunDB
+A personal behavioral system disguised as a habit tracker. Built with Next.js, GunDB, and Gemini AI.
 
 **No account. No cloud. Your data stays on your device.**
 
 <p align="center">
-  <img src="docs/screenshots/01-onboarding-welcome.png" width="200" />
-  <img src="docs/screenshots/04-habits-checked.png" width="200" />
+  <img src="docs/screenshots/03-habits-page.png" width="200" />
   <img src="docs/screenshots/05-stats-page.png" width="200" />
+  <img src="docs/screenshots/07-add-habit.png" width="200" />
   <img src="docs/screenshots/06-settings-page.png" width="200" />
 </p>
 
-## Features
+---
 
-### Habit Tracking
-- Card-based habit list with per-habit mini heatmaps
-- Swipe right to complete, swipe left for edit/skip/archive
-- Inline friction scoring (easy/moderate/hard) after each completion
-- Per-habit colors, weekly day selector, category filters
-- Minimum mode for low-energy days (floor versions only)
-- Habit bundles for one-tap batch completion
+## Core Tracking
 
-<p align="center">
-  <img src="docs/screenshots/03-habits-page.png" width="250" />
-  <img src="docs/screenshots/07-add-habit.png" width="250" />
-</p>
-
-### AI Check-in
-Describe your day in text or voice. AI classifies which habits you completed, asks about uncertain ones, and lets you apply with one tap.
+- **Card-based habits** with per-habit mini heatmaps, monochrome icons, and per-habit color picker (8 colors)
+- **Swipe gestures** — right to complete, left to reveal edit/skip/archive
+- **Friction scoring** — inline 3-dot rating (easy/moderate/hard) after each completion
+- **Frequency types** — daily, weekdays, 3x/week, specific days
+- **Weekly day selector** with color-coded completion dots
+- **Category filter** — All / Morning / Evening / Anytime
+- **Historical editing** — past 3 days editable, retroactive entries marked
+- **Streak tracking** — period-based, respects frequency schedules
+- **Streak recovery** — 1-day grace period, max 2/week, requires 3+ day prior streak
+- **Skip intentionally** — log a skip with reason (Tired/Busy/Sick/Rest day), improves data quality
+- **Minimum mode** — toggle for bad days, shows only floor versions of habits
 
 <p align="center">
   <img src="docs/screenshots/08-checkin-drawer.png" width="250" />
 </p>
 
-### Voice Journal
-Tap the mic, speak, and your thoughts are transcribed via Gemini. Journal entries are linked to each day and feed into weekly reflections.
+## AI Features
 
-### Intelligence Layer
-- **System Health Score** — single 0-100 number showing if your system is stable, declining, or recovering
-- **Keystone Habit Detection** — surfaces habits that boost everything else when done
-- **Habit Decay Alerts** — flags habits dropping in consistency before you notice
-- **Root Cause Detection** — connects journal entries + friction to explain *why* you miss habits
-- **Focus Habit** — auto-highlights the habit most at risk of being skipped
-- **Time-to-Complete** — shows when you typically do each habit
-- **Streak Recovery** — 1-day grace period to recover a broken streak
+- **AI Check-in** — describe your day in text or voice, Gemini classifies which habits you completed, confirm with one tap
+- **Voice journal** — tap mic, speak, Gemini transcribes instantly. Per-day entries with optional mood tagging
+- **Full-screen voice mode** — mic expands to centered recording UI with waveform animation
+- **Weekly AI reflection** — streaming conversation with Gemini reviewing your week, pattern extraction saved for future sessions
+- **Reflection memory** — stores behavioral patterns across weeks, AI references them in future reflections
 
-### Stats
-- GitHub-style contribution heatmap (365 days)
-- Per-habit consistency ranking with progress bars
-- Best/worst day of week analysis
+## Intelligence Layer
 
-### Weekly Reflection
-AI-powered conversational review of your week. Surfaces what worked, what didn't, and suggests adjustments. Reflection patterns are saved and referenced in future weeks.
+- **Next Best Action** — one line telling you what to do right now, derived from dependencies + decay + time of day
+- **System Health Score** — 0-100 composite of completion, streaks, friction, and decay (hidden until 3+ days of data)
+- **Keystone habit detection** — surfaces habits that boost overall completion when done, with confidence levels
+- **Habit dependency graph** — pairwise relationships grouped as Boosters and Breakers with actionable suggestions
+- **Habit decay alerts** — flags habits dropping 20%+ in consistency
+- **Root cause detection** — correlates journal keywords + friction + skip reasons to explain why habits are missed
+- **Dead habit detection** — identifies habits at <10% for 14+ days, prompts to archive
+- **Long-term friction memory** — tracks consecutive weeks of high friction per habit
+- **Silent coaching nudges** — inline on habit cards: "inactive lately", "↓ try 1 minute", "personal best", "getting consistent", "↑ exercise helps"
+- **Time context awareness** — morning greeting, evening journal auto-expand, time-appropriate next actions
+- **Auto simplification** — when system health drops below 40%, automatically filters to floor-only habits
+- **Confidence layer** — every insight shows high/medium confidence based on sample size
 
-### Experiments
-Test a change to a habit (move to evening, change frequency) for 2 weeks, then see before/after comparison. Keep or revert with one tap.
+## Stats
 
-### Skip Intentionally
-Mark a habit as intentionally skipped with a reason. Removes guilt, improves data quality, and helps the AI understand your patterns.
+- **GitHub-style heatmap** — 365-day contribution grid with 5-level green color scale
+- **Per-habit consistency** — ranked list with progress bars and decay/friction warnings
+- **Connections** — Boosters and Breakers with impact percentages and suggestions
+- **Keystone habits** — habits that make everything else easier
+- **Timing** — when you typically complete each habit (mode-based)
+- **Inactive section** — dead habits with one-tap archive
 
-### Settings
-- Per-habit color picker (8 colors)
-- Accent color theming (7 options including white)
-- Daily goal slider
-- Push notification reminders
-- Data export (JSON + Markdown)
-- Encrypted API key storage (AES-256-GCM)
+## Organization
+
+- **Habit bundles** — group habits, one-tap complete all (max 3 bundles)
+- **Experiment mode** — test a change for 2 weeks, compare before/after, keep or revert
+- **Focus habit** — auto-highlighted habit most at risk of being skipped
+- **Search** — instant search across habits, journal entries, and #tags
+- **Context tags** — auto-extracted hashtags from journal text
+
+## Settings & Customization
+
+- **Per-habit colors** — 8 options per habit
+- **Accent color theming** — 7 app-wide options (white, teal, amber, green, rose, purple, blue)
+- **Daily goal slider** — 50-100%
+- **Push notification reminders** — daily at your chosen time via Web Push
+- **Data export** — JSON + Markdown
+- **Encrypted API key storage** — AES-256-GCM with non-extractable CryptoKey
 
 ## Tech Stack
 
@@ -93,13 +106,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Environment Variables (optional)
 
-Push notifications require VAPID keys. Generate with:
+Push notifications require VAPID keys:
 
 ```bash
 npx web-push generate-vapid-keys
 ```
 
-Then set in `.env.local`:
+Add to `.env.local`:
 
 ```
 VAPID_PUBLIC_KEY=...
@@ -113,21 +126,21 @@ VAPID_MAILTO=mailto:you@example.com
 cadence-frontend/
   src/
     app/
-      api/           # Serverless API routes (transcribe, checkin, reminders, gemini)
-      page.tsx        # Entry point — onboarding gate → app shell
+      api/            # Serverless functions (transcribe, checkin, reminders, gemini)
+      page.tsx         # Onboarding gate → app shell
     components/
-      habits/         # Habit cards, journal, check-in, drawers
-      stats/          # Stats page, heatmap, health ring
-      system/         # Settings, experiments, bundles, reminders
-      layout/         # App shell, bottom tabs, header, accent provider
+      habits/          # Cards, journal, check-in, drawers, coaching nudges
+      stats/           # Heatmap, health ring, dependencies, consistency
+      system/          # Settings, experiments, bundles, reminders
+      layout/          # App shell, floating nav, header, accent provider
     lib/
-      gun/            # GunDB client, provider, data cache, types
-      hooks/          # All custom hooks (habits, logs, stats, journal, etc.)
-      crypto/         # API key encryption (AES-256-GCM key vault)
-      utils/          # Dates, frequency, tags, habit icons
+      gun/             # GunDB client, provider, data cache, types
+      hooks/           # 20+ custom hooks (habits, logs, stats, health, dependencies, etc.)
+      crypto/          # API key encryption (AES-256-GCM vault)
+      utils/           # Dates, frequency, tags, habit icons
 ```
 
-Data flows through a centralized `DataProvider` that loads all habits and logs once from GunDB, then all hooks derive from the shared cache. Tab switching is instant (CSS-hidden, not unmounted).
+Data flows through a centralized `DataProvider` that loads all habits and logs once from GunDB. All hooks derive from the shared cache. Tab switching is instant (CSS-hidden, not unmounted).
 
 ## License
 
