@@ -13,6 +13,7 @@ export interface HabitDependency {
   impact: number;
   direction: "positive" | "negative";
   suggestion: string;
+  confidence: "high" | "medium";
 }
 
 interface UseHabitDependenciesResult {
@@ -85,6 +86,9 @@ export function useHabitDependencies(): UseHabitDependenciesResult {
             ? `do ${source.name.toLowerCase()} first`
             : `protect ${source.name.toLowerCase()} to keep ${target.name.toLowerCase()} consistent`;
 
+        // High confidence = 10+ samples each, medium = 5-9
+        const confidence = (aDoneAndBScheduled >= 10 && aNotDoneAndBScheduled >= 10) ? "high" as const : "medium" as const;
+
         allDeps.push({
           sourceId: source.id,
           sourceName: source.name,
@@ -93,6 +97,7 @@ export function useHabitDependencies(): UseHabitDependenciesResult {
           impact,
           direction,
           suggestion,
+          confidence,
         });
       }
     }

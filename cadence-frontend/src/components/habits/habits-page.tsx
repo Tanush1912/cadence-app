@@ -152,11 +152,13 @@ export function HabitsPage() {
       <div className="flex-1 overflow-y-auto">
         {/* Streak recovery banner */}
         {isToday(selectedDate) && (
-          <StreakRecoveryBanner
-            onDismiss={() => {}}
-            recoveriesUsed={0}
-            maxRecoveries={2}
-          />
+          <div className="px-4 pb-2">
+            <StreakRecoveryBanner
+              onDismiss={() => {}}
+              recoveriesUsed={0}
+              maxRecoveries={2}
+            />
+          </div>
         )}
 
         {/* Journal — above habits */}

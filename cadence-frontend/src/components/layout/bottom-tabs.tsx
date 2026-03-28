@@ -47,31 +47,33 @@ export function BottomTabs({
   onTabChange: (tab: TabId) => void;
 }) {
   return (
-    <nav
-      className="flex items-center justify-center pt-2 pb-2 bg-[#0a0a0a]"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}
-    >
-      <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={cn(
-                "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all",
-                isActive
-                  ? "text-[#0a0a0a]"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              style={isActive ? { backgroundColor: "var(--primary)" } : undefined}
-            >
-              {tab.icon}
-              {isActive && <span>{tab.label}</span>}
-            </button>
-          );
-        })}
+    <nav className="bg-[#0a0a0a]">
+      {/* Nav pill — sits above the safe area */}
+      <div className="flex items-center justify-center py-2">
+        <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all",
+                  isActive
+                    ? "text-[#0a0a0a]"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={isActive ? { backgroundColor: "var(--primary)" } : undefined}
+              >
+                {tab.icon}
+                {isActive && <span>{tab.label}</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
+      {/* Safe area spacer — just background color, no content */}
+      <div className="bg-[#0a0a0a]" style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
     </nav>
   );
 }

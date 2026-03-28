@@ -26,6 +26,7 @@ export interface KeystoneHabit {
   completionWith: number;
   completionWithout: number;
   impact: number;
+  confidence: "high" | "medium";
 }
 
 export interface HabitTiming {
@@ -280,6 +281,8 @@ export function useStats(): StatsData {
         const avgWithout = Math.round(keystoneWithout[h.id].totalPct / withoutCount);
         const impact = avgWith - avgWithout;
         if (impact <= 15) return null;
+        // High confidence = 10+ samples each side, medium = 5-9
+        const conf = (withCount >= 10 && withoutCount >= 10) ? "high" as const : "medium" as const;
         return {
           id: h.id,
           name: h.name,
@@ -287,6 +290,7 @@ export function useStats(): StatsData {
           completionWith: avgWith,
           completionWithout: avgWithout,
           impact,
+          confidence: conf,
         };
       })
       .filter((k): k is KeystoneHabit => k !== null)

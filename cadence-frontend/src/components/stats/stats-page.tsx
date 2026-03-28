@@ -283,9 +283,10 @@ export function StatsPage() {
                 <span className="text-sm text-muted-foreground"><HabitIcon name={k.name} size={16} /></span>
                 <span className="text-sm flex-1">{k.name}</span>
                 <div className="text-right">
-                  <span className="text-xs font-mono text-emerald-400">+{k.impact}%</span>
+                  <span className="text-xs font-mono" style={{ color: "var(--primary)" }}>+{k.impact}%</span>
                   <p className="text-[10px] text-muted-foreground">
                     {k.completionWith}% with &middot; {k.completionWithout}% without
+                    <span className="text-muted-foreground/40"> &middot; {k.confidence}</span>
                   </p>
                 </div>
               </div>
