@@ -240,7 +240,7 @@ ${conversationMessages.map((m) => `${m.role === "user" ? "User" : "Coach"}: ${m.
 
   return (
     <Drawer open={open} onOpenChange={handleClose}>
-      <DrawerContent className="bg-[#141414] border-[#262626] h-[85dvh]">
+      <DrawerContent className="bg-[#141414] border-[#262626] h-[85svh]">
         <DrawerHeader>
           <DrawerTitle className="text-foreground">Weekly Reflection</DrawerTitle>
         </DrawerHeader>

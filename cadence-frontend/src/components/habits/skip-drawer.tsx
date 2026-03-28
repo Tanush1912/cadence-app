@@ -77,7 +77,8 @@ export function SkipDrawer({
 
           {/* Drawer */}
           <motion.div
-            className="fixed bottom-0 left-0 right-0 z-50 bg-[#141414] border-t border-[#262626] rounded-t-2xl px-5 pb-8 pt-4"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-[#141414] border-t border-[#262626] rounded-t-2xl px-5 pt-4"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}

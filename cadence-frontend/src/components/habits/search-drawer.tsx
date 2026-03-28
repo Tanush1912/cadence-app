@@ -42,7 +42,7 @@ export function SearchDrawer({ open, onOpenChange }: SearchDrawerProps) {
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="bg-[#0a0a0a] border-[#262626] max-h-[85vh]">
+      <DrawerContent className="bg-[#0a0a0a] border-[#262626] max-h-[85svh]">
         <DrawerHeader className="pb-2">
           <DrawerTitle className="sr-only">Search</DrawerTitle>
           {/* Search input */}
