@@ -16,6 +16,7 @@ export interface HabitStat {
   completed: number;
   hasFrictionWarning: boolean;
   decayWarning: { recent: number; prior: number } | null;
+  longTermFriction: { weeks: number } | null;
 }
 
 export interface KeystoneHabit {
@@ -245,6 +246,27 @@ export function useStats(): StatsData {
             : 0,
           hasFrictionWarning: habitFrictionDays[h.id] >= 7,
           decayWarning: isDecaying ? { recent: recentRate, prior: priorRate } : null,
+          longTermFriction: (() => {
+            // Count consecutive weeks with avg friction >= 2.5
+            let weeks = 0;
+            for (let w = 0; w < 8; w++) {
+              let wFrictionSum = 0, wFrictionCount = 0;
+              for (let d = 0; d < 7; d++) {
+                const dk = addDays(today, -(w * 7 + d + 1));
+                const log = allLogs[dk]?.[h.id];
+                if (log?.friction && log.friction > 0) {
+                  wFrictionSum += log.friction;
+                  wFrictionCount++;
+                }
+              }
+              if (wFrictionCount >= 2 && (wFrictionSum / wFrictionCount) >= 2.5) {
+                weeks++;
+              } else {
+                break;
+              }
+            }
+            return weeks >= 3 ? { weeks } : null;
+          })(),
         };
       })
       .sort((a, b) => b.completionRate - a.completionRate);

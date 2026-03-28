@@ -9,6 +9,7 @@ export interface SystemHealth {
   score: number;
   status: "thriving" | "stable" | "declining" | "recovering";
   trend: "up" | "down" | "flat";
+  shouldSimplify: boolean;
   factors: {
     completion: number;
     streaks: number;
@@ -22,6 +23,7 @@ const EMPTY: SystemHealth = {
   score: 0,
   status: "stable",
   trend: "flat",
+  shouldSimplify: false,
   factors: { completion: 0, streaks: 0, friction: 0, decay: 0 },
   loading: true,
 };
@@ -190,6 +192,7 @@ export function useSystemHealth(): SystemHealth {
       score: health,
       status,
       trend,
+      shouldSimplify: health >= 0 && health < 40,
       factors: {
         completion: Math.round(completionScore),
         streaks: Math.round(streakScore),

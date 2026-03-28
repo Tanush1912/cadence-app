@@ -108,7 +108,18 @@ export function useCoachingNudges(
       const priorRate = prior7Scheduled > 0 ? (prior7Done / prior7Scheduled) * 100 : -1;
       const avgFriction = frictionCount > 0 ? frictionSum / frictionCount : 0;
 
-      // 1. Dropped — inactive lately
+      // 0. Dead habit — <10% for 14+ days, no improvement
+      if (recentRate >= 0 && recentRate < 10 && priorRate >= 0 && priorRate < 20) {
+        nudges[h.id] = {
+          habitId: h.id,
+          type: "dropped",
+          message: "inactive",
+          actions: [{ label: "archive", type: "archive" }],
+        };
+        continue;
+      }
+
+      // 1. Dropped — inactive lately (was active, now dropped)
       if (recentRate >= 0 && recentRate < 20 && priorRate > 60) {
         nudges[h.id] = {
           habitId: h.id,

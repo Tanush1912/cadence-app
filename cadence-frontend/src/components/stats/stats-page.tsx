@@ -1,9 +1,11 @@
 "use client";
 
+import { useCallback } from "react";
 import { useStats, type DayCell } from "@/lib/hooks/use-stats";
 import { useSystemHealth } from "@/lib/hooks/use-system-health";
 import { useRootCauses } from "@/lib/hooks/use-root-causes";
 import { useHabitDependencies } from "@/lib/hooks/use-habit-dependencies";
+import { useGun } from "@/lib/gun/gun-provider";
 import { cn } from "@/lib/utils";
 import { HabitIcon } from "@/lib/utils/habit-icons";
 import { HealthRing } from "./health-ring";
@@ -119,6 +121,16 @@ export function StatsPage() {
   const health = useSystemHealth();
   const { causes: rootCauses } = useRootCauses();
   const { boosters, breakers } = useHabitDependencies();
+  const gun = useGun();
+
+  const inactiveHabits = stats.habitStats.filter((h) => h.completionRate < 10);
+
+  const handleArchive = useCallback(
+    (id: string) => {
+      gun?.get("habits").get(id).put({ archived: true });
+    },
+    [gun]
+  );
 
   if (stats.loading) {
     return (
@@ -184,31 +196,38 @@ export function StatsPage() {
           {stats.habitStats.map((h, i) => (
             <div
               key={h.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#141414] transition-colors"
+              className="px-3 py-2.5 rounded-xl hover:bg-[#141414] transition-colors"
             >
-              <span className="text-sm w-5 text-right text-muted-foreground font-mono">{i + 1}</span>
-              <span className="text-sm text-muted-foreground"><HabitIcon name={h.name} size={16} /></span>
-              <span className="text-sm flex-1 truncate">{h.name}</span>
-              {h.decayWarning && (
-                <span className="text-amber-400 text-[10px] whitespace-nowrap" title={`${h.decayWarning.prior}% → ${h.decayWarning.recent}%`}>
-                  {"↓"}{h.decayWarning.recent}%
+              <div className="flex items-center gap-3">
+                <span className="text-sm w-5 text-right text-muted-foreground font-mono">{i + 1}</span>
+                <span className="text-sm text-muted-foreground"><HabitIcon name={h.name} size={16} /></span>
+                <span className="text-sm flex-1 truncate">{h.name}</span>
+                {h.decayWarning && (
+                  <span className="text-amber-400 text-[10px] whitespace-nowrap" title={`${h.decayWarning.prior}% → ${h.decayWarning.recent}%`}>
+                    {"↓"}{h.decayWarning.recent}%
+                  </span>
+                )}
+                {!h.decayWarning && h.hasFrictionWarning && (
+                  <span className="text-amber-400 text-xs">{"⚠"}</span>
+                )}
+                <div className="w-20 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${h.completionRate}%`,
+                      backgroundColor: GROUP_COLORS[h.group] || "#2dd4bf",
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-mono text-muted-foreground w-8 text-right">
+                  {h.completionRate}%
                 </span>
-              )}
-              {!h.decayWarning && h.hasFrictionWarning && (
-                <span className="text-amber-400 text-xs">{"⚠"}</span>
-              )}
-              <div className="w-20 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${h.completionRate}%`,
-                    backgroundColor: GROUP_COLORS[h.group] || "#2dd4bf",
-                  }}
-                />
               </div>
-              <span className="text-xs font-mono text-muted-foreground w-8 text-right">
-                {h.completionRate}%
-              </span>
+              {h.longTermFriction && (
+                <p className="text-amber-400/60 text-[10px] ml-[calc(1.25rem+0.75rem)]">
+                  hard for {h.longTermFriction.weeks} week{h.longTermFriction.weeks !== 1 ? "s" : ""}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -351,6 +370,33 @@ export function StatsPage() {
                 <span className="text-sm text-muted-foreground"><HabitIcon name={t.name} size={16} /></span>
                 <span className="text-sm flex-1 truncate text-muted-foreground">{t.name}</span>
                 <span className="text-xs font-mono text-foreground">{t.usualLabel}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Inactive */}
+      {inactiveHabits.length > 0 && (
+        <div className="px-5 mb-8">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+            Inactive
+          </h2>
+          <div className="space-y-1">
+            {inactiveHabits.map((h) => (
+              <div
+                key={h.id}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#141414] transition-colors"
+              >
+                <span className="text-sm text-muted-foreground"><HabitIcon name={h.name} size={16} /></span>
+                <span className="text-sm flex-1 truncate">{h.name}</span>
+                <span className="text-[10px] text-muted-foreground/50">inactive</span>
+                <button
+                  onClick={() => handleArchive(h.id)}
+                  className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors px-1.5 py-0.5 rounded border border-[#262626] hover:border-[#363636]"
+                >
+                  archive
+                </button>
               </div>
             ))}
           </div>

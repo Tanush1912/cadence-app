@@ -21,7 +21,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
   const { profile } = useProfile();
   const { isRecording, isSupported, startRecording, stopRecording, error: recorderError } = useVoiceRecorder();
 
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(() => new Date().getHours() >= 18);
   const [text, setText] = useState("");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [showMood, setShowMood] = useState(false);
@@ -54,6 +54,13 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
       setText(entry?.text ?? "");
     }
     if (entry?.mood) setShowMood(true);
+    // Collapse evening auto-expand if entry already has content
+    if (entry?.text || entry?.mood) {
+      const hour = new Date().getHours();
+      if (hour >= 18 && !isEditingRef.current) {
+        setExpanded(false);
+      }
+    }
   }, [entry?.text, entry?.mood]);
 
   useEffect(() => {

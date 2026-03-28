@@ -17,6 +17,14 @@ export function AppHeader({
   onToggleMinimumMode?: () => void;
 }) {
   const dateDisplay = formatDateLong(selectedDate);
+  const hour = new Date().getHours();
+  const greeting = hour < 12
+    ? "Good morning"
+    : hour >= 22
+      ? "Wind down"
+      : hour >= 18
+        ? "Evening"
+        : null;
 
   return (
     <header className="px-5 pb-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
@@ -25,7 +33,14 @@ export function AppHeader({
           <h1 className="text-xl font-semibold tracking-tight">
             Cadence
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{dateDisplay}</p>
+          {greeting ? (
+            <div className="mt-0.5">
+              <p className="text-sm text-muted-foreground">{greeting}</p>
+              <p className="text-[10px] text-muted-foreground/50">{dateDisplay}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-0.5">{dateDisplay}</p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {onToggleMinimumMode && (

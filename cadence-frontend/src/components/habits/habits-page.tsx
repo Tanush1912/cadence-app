@@ -29,6 +29,8 @@ import { BundleCard } from "./bundle-card";
 import { StreakRecoveryBanner } from "./streak-recovery-banner";
 import { useCoachingNudges } from "@/lib/hooks/use-coaching-nudges";
 import { useBundles } from "@/lib/hooks/use-bundles";
+import { useNextAction } from "@/lib/hooks/use-next-action";
+import { useSystemHealth } from "@/lib/hooks/use-system-health";
 import { isToday, todayKey } from "@/lib/utils/dates";
 import type { Habit, GroupName, FrictionScore } from "@/lib/types";
 
@@ -45,6 +47,8 @@ export function HabitsPage() {
   const { habits: rawHabits } = useSharedData();
   const nudges = useCoachingNudges();
   const { bundles } = useBundles();
+  const nextAction = useNextAction(logs, total, completed);
+  const health = useSystemHealth();
 
   const isMinimumMode = !!(profile.minimumMode && profile.minimumModeDate === todayKey());
   const toggleMinimumMode = useCallback(() => {
@@ -103,12 +107,15 @@ export function HabitsPage() {
     setDrawerOpen(true);
   }, []);
 
+  const isAutoSimplified = health.shouldSimplify && !isMinimumMode;
+  const effectiveMinMode = isMinimumMode || isAutoSimplified;
+
   const filteredHabits = useMemo(() => {
     let list = habits;
-    if (isMinimumMode) list = list.filter((h) => h.floor && h.floor.trim().length > 0);
+    if (effectiveMinMode) list = list.filter((h) => h.floor && h.floor.trim().length > 0);
     if (categoryFilter !== "all") list = list.filter((h) => h.group === categoryFilter);
     return list;
-  }, [habits, categoryFilter, isMinimumMode]);
+  }, [habits, categoryFilter, effectiveMinMode]);
 
   const weekProgress = useMemo(() => {
     const progress: Record<string, number> = {};
@@ -191,10 +198,23 @@ export function HabitsPage() {
           </div>
         )}
 
-        {/* Focus habit — only on today */}
-        {isToday(selectedDate) && focusHabit && !isMinimumMode && (
+        {/* Next best action — replaces focus card */}
+        {isToday(selectedDate) && nextAction && !isMinimumMode && (
+          <div className="px-5 pb-2">
+            <p className="text-[13px]" style={{ color: "var(--primary)" }}>
+              {nextAction.message}
+            </p>
+          </div>
+        )}
+
+        {/* Auto-simplification banner */}
+        {health.shouldSimplify && !isMinimumMode && (
           <div className="px-4 pb-2">
-            <FocusCard focus={focusHabit} />
+            <div className="px-3 py-2 rounded-xl bg-amber-500/5 border border-amber-500/10">
+              <p className="text-[11px] text-amber-400/70">
+                simplified — your system needs a reset
+              </p>
+            </div>
           </div>
         )}
 
