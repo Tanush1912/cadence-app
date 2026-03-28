@@ -19,7 +19,7 @@ export function AppHeader({
   const dateDisplay = formatDateLong(selectedDate);
 
   return (
-    <header className="px-5 pt-4 pb-2">
+    <header className="px-5 pb-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">

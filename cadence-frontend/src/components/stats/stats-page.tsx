@@ -128,7 +128,7 @@ export function StatsPage() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <header className="px-5 pt-4 pb-1">
+      <header className="px-5 pb-1" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
         <h1 className="text-xl font-semibold tracking-tight">Stats</h1>
       </header>
 

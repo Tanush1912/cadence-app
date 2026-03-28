@@ -49,7 +49,7 @@ export function BottomTabs({
   return (
     <nav
       className="flex items-center justify-center py-3 bg-[#0a0a0a]"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)" }}
     >
       <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-full px-2 py-1.5">
         {TABS.map((tab) => {
