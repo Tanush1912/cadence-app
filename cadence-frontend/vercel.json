@@ -1,4 +1,5 @@
 {
+  "alias": ["cadence.vercel.app"],
   "crons": [
     {
       "path": "/api/reminders",
