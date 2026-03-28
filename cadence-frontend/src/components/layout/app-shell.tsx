@@ -12,9 +12,8 @@ export function AppShell() {
 
   return (
     <AccentProvider>
-    <div className="flex flex-col h-[100svh] bg-[#0a0a0a] text-foreground overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-[#0a0a0a] text-foreground">
       <main className="flex-1 min-h-0 relative">
-        {/* Keep all tabs mounted — hide inactive with CSS to preserve state */}
         <div className={activeTab === "habits" ? "h-full overflow-hidden" : "hidden"}>
           <HabitsPage />
         </div>
