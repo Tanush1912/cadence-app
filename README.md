@@ -1,6 +1,6 @@
 # Cadence
 
-A personal habit tracking PWA that turns raw behavior data into actionable insights. Built with Next.js, GunDB, and Gemini AI.
+A personal habit tracking PWA that turns raw behavior data into actionable insights. Built with Next.js and GunDB
 
 **No account. No cloud. Your data stays on your device.**
 
