@@ -84,3 +84,17 @@ Dated notes for whoever works on this next. What went wrong, what to do instead.
   `data-provider` accumulator rather than overloading `skipped` or `done`, both of which would have
   persisted a semantic lie in local-only data with no backup.
 - Measure an eslint baseline **by file and rule**, not by count. Equal counts can hide fixed-3-added-3.
+
+### Deploy, added after shipping
+
+- **`vercel env add` exits 0 without writing.** Both the piped form and `--value` reported success
+  and stored nothing; pulling the values back showed length 0. **Always read env vars back after
+  writing them.** This is the absent-vs-failed-vs-clean distinction in a place that is easy to miss.
+- **A whitespace env var is truthy in JS.** `if (VAPID_PUBLIC && VAPID_PRIVATE)` passed on `" "`, so
+  `setVapidDetails` got garbage. Validate shape, not presence.
+- **Never call something that can throw at module scope in a route file.** `setVapidDetails` threw
+  during page-data collection and failed the entire deploy, not just the push feature. A
+  misconfigured environment should disable a feature, never take the site down.
+- Route files may only export handlers. `export const pushConfigured` is a type error.
+- **Do not run `npm run build` while the dev server is up** on the same tree: the production build
+  replaces `.next` and dev 500s with a missing `routes-manifest.json`. Restart dev after a build.
