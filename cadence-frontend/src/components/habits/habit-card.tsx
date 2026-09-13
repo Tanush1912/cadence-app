@@ -12,12 +12,6 @@ import { isEditable } from "@/lib/utils/dates";
 import { haptic } from "@/lib/utils/haptics";
 import type { Habit, Log, Streak, FrictionScore } from "@/lib/types";
 
-const ACCENT_COLORS: Record<string, string> = {
-  morning: "teal",
-  evening: "amber",
-  anytime: "rose",
-};
-
 const COLOR_MAP: Record<string, string> = {
   teal: "#2dd4bf",
   amber: "#f59e0b",
@@ -70,9 +64,8 @@ export function HabitCard({
   const skipped = log?.skipped ?? false;
   const editable = isEditable(dateKey);
   const habitColor = habit.color || GROUP_FALLBACK_COLOR[habit.group] || "teal";
-  const accent = habitColor;
   const hexColor = COLOR_MAP[habitColor] || COLOR_MAP.teal;
-  const [showActions, setShowActions] = useState(false);
+  const [, setShowActions] = useState(false);
   const checkControls = useAnimationControls();
 
   const handleFrictionCommit = useCallback(
@@ -101,7 +94,6 @@ export function HabitCard({
   const x = useMotionValue(0);
   const dragRef = useRef<HTMLDivElement>(null);
 
-  const bgOpacity = useTransform(x, [-120, -60, 0, 60, 120], [1, 0.8, 0, 0.8, 1]);
   const checkScale = useTransform(x, [0, 60, 120], [0.5, 0.8, 1]);
   const actionScale = useTransform(x, [-120, -60, 0], [1, 0.8, 0.5]);
 
@@ -140,11 +132,41 @@ export function HabitCard({
     animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
   };
 
+  const streakLabel = streak && streak.current > 0 ? `${streak.current}d` : null;
+
+  const checkControl = skipped && !done ? (
+    <span className="px-2 text-label font-medium text-muted-foreground">skipped</span>
+  ) : (
+    <motion.button
+      onClick={(e) => { e.stopPropagation(); handleToggle(); }}
+      disabled={!editable}
+      aria-label={done ? `Mark ${habit.name} not done` : `Mark ${habit.name} done`}
+      className={cn(
+        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors",
+        done
+          ? "text-primary-foreground"
+          : "border-surface-3 bg-transparent text-ink-3 hover:text-foreground",
+        !editable && "cursor-not-allowed opacity-40"
+      )}
+      style={done ? { backgroundColor: "var(--primary)", borderColor: "var(--primary)" } : undefined}
+      animate={checkControls}
+      whileTap={editable ? { scale: 0.92 } : undefined}
+    >
+      <svg
+        width="19" height="19" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth={done ? "2.6" : "2"}
+        strokeLinecap="round" strokeLinejoin="round"
+      >
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </motion.button>
+  );
+
   return (
-    <div className="relative overflow-hidden rounded-2xl">
+    <div className="relative overflow-hidden rounded-lg">
       {/* Swipe right background — complete */}
       <motion.div
-        className="absolute inset-0 flex items-center pl-5 rounded-2xl bg-[var(--primary)]/20"
+        className="absolute inset-0 flex items-center rounded-lg bg-[var(--primary)]/20 pl-5"
         style={{ opacity: useTransform(x, [0, 60], [0, 1]) }}
       >
         <motion.div style={{ scale: checkScale }}>
@@ -156,33 +178,36 @@ export function HabitCard({
 
       {/* Swipe left background — actions */}
       <motion.div
-        className="absolute inset-0 flex items-center justify-end gap-2 pr-3 rounded-2xl"
+        className="absolute inset-0 flex items-center justify-end gap-2 rounded-lg pr-3"
         style={{ opacity: useTransform(x, [-60, 0], [1, 0]) }}
       >
         <motion.button
           onClick={() => { onEdit?.(habit); dismissActions(); }}
-          className="w-10 h-10 rounded-xl bg-[#262626] flex items-center justify-center text-muted-foreground hover:text-foreground"
+          aria-label="Edit habit"
+          className="flex h-11 w-11 items-center justify-center rounded-sm bg-surface-3 text-muted-foreground hover:text-foreground"
           style={{ scale: actionScale }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
           </svg>
         </motion.button>
         <motion.button
           onClick={() => { onSkip?.(habit); dismissActions(); }}
-          className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center text-indigo-400 hover:bg-indigo-500/25"
+          aria-label="Skip habit"
+          className="flex h-11 w-11 items-center justify-center rounded-sm bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25"
           style={{ scale: actionScale }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="5 4 15 12 5 20 5 4" /><line x1="19" x2="19" y1="5" y2="19" />
           </svg>
         </motion.button>
         <motion.button
           onClick={() => { onArchive?.(habit); dismissActions(); }}
-          className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center text-red-400 hover:bg-red-500/25"
+          aria-label="Archive habit"
+          className="flex h-11 w-11 items-center justify-center rounded-sm bg-destructive/15 text-destructive hover:bg-destructive/25"
           style={{ scale: actionScale }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m21 8-2 13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L3 8" /><path d="M1 8h22" /><path d="M10 12v6" /><path d="M14 12v6" /><path d="m15 4-1-2H10L9 4" />
           </svg>
         </motion.button>
@@ -194,37 +219,71 @@ export function HabitCard({
         ref={dragRef}
         style={{ x, touchAction: "pan-y" }}
         className={cn(
-          "relative bg-[#141414] rounded-2xl border border-[#262626] overflow-hidden cursor-grab active:cursor-grabbing transition-opacity duration-300",
+          "relative cursor-grab overflow-hidden rounded-lg border border-border bg-card transition-opacity duration-300 active:cursor-grabbing",
           skipped && !done && "opacity-60",
           done && !skipped && "opacity-[0.55]"
         )}
       >
-        {/* Top section */}
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${hexColor}15`, color: hexColor }}
-          >
-            <HabitIcon name={habit.name} size={20} />
+        {minimumMode ? (
+          <div className="flex items-center gap-3 py-3 pr-3 pl-3.5">
+            <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-sm bg-secondary text-muted-foreground">
+              <HabitIcon name={habit.name} size={17} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-title font-semibold tracking-tight text-amber-400">
+                {habit.floor || habit.name}
+              </h3>
+              <div className="mt-0.5 flex items-center gap-1.5 text-label">
+                <span className="truncate text-muted-foreground">{habit.name}</span>
+                {streakLabel && (
+                  <>
+                    <span className="text-ink-3">&middot;</span>
+                    <span className="shrink-0 font-mono text-muted-foreground">{streakLabel}</span>
+                  </>
+                )}
+                {nudge && (
+                  <>
+                    <span className="text-ink-3">&middot;</span>
+                    <span className="truncate text-amber-400">{nudge.message}</span>
+                  </>
+                )}
+              </div>
+              <div
+                className="-my-2 cursor-pointer py-2"
+                onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
+              >
+                <MiniHeatmap data={heatmapData} variant="compact" />
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <FrictionDots
+                visible={friction.state === "showing"}
+                onSelect={friction.commit}
+              />
+              {checkControl}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            {minimumMode ? (
-              <>
-                <h3 className="text-[15px] font-bold truncate text-amber-300/90">{habit.floor}</h3>
-                <p className="text-[11px] text-muted-foreground/50 truncate">{habit.name}</p>
-              </>
-            ) : (
-              <>
-                <h3 className="text-[15px] font-bold tracking-tight truncate">{habit.name}</h3>
+        ) : (
+          <>
+            {/* Top section */}
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm"
+                style={{ backgroundColor: `${hexColor}15`, color: hexColor }}
+              >
+                <HabitIcon name={habit.name} size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-title font-semibold tracking-tight">{habit.name}</h3>
                 {nudge ? (
-                  <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="mt-0.5 flex items-center gap-1.5">
                     {(nudge.type === "personal-best" || nudge.type === "consistent") ? (
-                      <span className="text-[11px] font-medium opacity-70" style={{ color: "var(--primary)" }}>
+                      <span className="text-label font-medium" style={{ color: "var(--primary)" }}>
                         {nudge.message}
                       </span>
                     ) : nudge.type === "dropped" ? (
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-muted-foreground/40">{nudge.message}</span>
+                        <span className="text-label text-muted-foreground">{nudge.message}</span>
                         {nudge.actions?.map((a) => (
                           <button
                             key={a.label}
@@ -232,7 +291,7 @@ export function HabitCard({
                               e.stopPropagation();
                               if (a.type === "archive") onArchive?.(habit);
                             }}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-[#1a1a1a] text-muted-foreground/50 hover:text-foreground transition-colors"
+                            className="rounded-sm bg-secondary px-1.5 py-0.5 text-micro text-muted-foreground transition-colors hover:text-foreground"
                           >
                             {a.label}
                           </button>
@@ -240,7 +299,7 @@ export function HabitCard({
                       </div>
                     ) : (
                       <span
-                        className="text-[11px] text-muted-foreground/40 cursor-pointer hover:text-muted-foreground transition-colors"
+                        className="cursor-pointer text-label text-muted-foreground transition-colors hover:text-foreground"
                         onClick={(e) => { e.stopPropagation(); onEdit?.(habit); }}
                       >
                         {nudge.message}
@@ -248,60 +307,30 @@ export function HabitCard({
                     )}
                   </div>
                 ) : habit.floor ? (
-                  <p className="text-[11px] text-muted-foreground/50 truncate">{habit.floor}</p>
+                  <p className="truncate text-label text-muted-foreground">{habit.floor}</p>
                 ) : null}
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <FrictionDots
-              visible={friction.state === "showing"}
-              onSelect={friction.commit}
-            />
-            {streak && streak.current > 0 && (
-              <span className="text-xs text-muted-foreground font-mono">
-                {streak.current}d
-              </span>
-            )}
-            {skipped && !done ? (
-              <span className="text-xs text-muted-foreground/60 font-medium px-2">
-                skipped
-              </span>
-            ) : (
-              <motion.button
-                onClick={(e) => { e.stopPropagation(); handleToggle(); }}
-                disabled={!editable}
-                className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                  done
-                    ? "text-[#0a0a0a]"
-                    : "bg-[#262626] text-muted-foreground hover:text-foreground",
-                  !editable && "opacity-40 cursor-not-allowed"
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <FrictionDots
+                  visible={friction.state === "showing"}
+                  onSelect={friction.commit}
+                />
+                {streakLabel && (
+                  <span className="font-mono text-label text-muted-foreground">
+                    {streakLabel}
+                  </span>
                 )}
-                style={done ? { backgroundColor: "var(--primary)" } : undefined}
-                animate={checkControls}
-                whileTap={editable ? { scale: 0.92 } : undefined}
-              >
-                <svg
-                  width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth={done ? "3" : "2"}
-                  strokeLinecap="round" strokeLinejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </motion.button>
-            )}
-          </div>
-        </div>
+                {checkControl}
+              </div>
+            </div>
 
-        {/* Mini heatmap — hidden in minimum mode for simplicity */}
-        {!minimumMode && (
-          <div
-            className="px-4 pb-3 pt-0.5 cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
-          >
-            <MiniHeatmap data={heatmapData} accentColor={accent} />
-          </div>
+            <div
+              className="cursor-pointer px-4 pt-0.5 pb-3"
+              onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
+            >
+              <MiniHeatmap data={heatmapData} />
+            </div>
+          </>
         )}
       </motion.div>
     </div>

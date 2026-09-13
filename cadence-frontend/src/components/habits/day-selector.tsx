@@ -32,19 +32,19 @@ export function DaySelector({
               key={dateKey}
               onClick={() => onSelect(dateKey)}
               className={cn(
-                "flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all",
-                selected ? "bg-[#1a1a1a]" : "hover:bg-[#1a1a1a]/50",
+                "flex flex-1 flex-col items-center gap-1 rounded-sm py-2 transition-all",
+                selected ? "bg-secondary" : "hover:bg-secondary/50",
                 future && "opacity-40"
               )}
             >
-              <span className="text-[10px] uppercase text-muted-foreground font-medium">
+              <span className="text-micro font-medium text-muted-foreground uppercase">
                 {DAY_LETTERS[i]}
               </span>
               <span
                 className={cn(
-                  "text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full",
-                  today && selected && "text-[#0a0a0a]",
-                  today && !selected && "text-foreground font-bold",
+                  "flex h-7 w-7 items-center justify-center rounded-full text-label font-medium",
+                  today && selected && "text-primary-foreground",
+                  today && !selected && "font-bold text-foreground",
                   !today && selected && "text-foreground",
                   !today && !selected && "text-muted-foreground"
                 )}
@@ -55,14 +55,14 @@ export function DaySelector({
               {!future && (
                 <div
                   className={cn(
-                    "w-1.5 h-1.5 rounded-full",
+                    "h-1.5 w-1.5 rounded-full",
                     hasData
                       ? pct >= 70
-                        ? "bg-[var(--primary)]"
+                        ? "bg-primary"
                         : pct >= 40
                           ? "bg-amber-400"
                           : "bg-rose-400"
-                      : "bg-[#262626]"
+                      : "bg-surface-3"
                   )}
                 />
               )}
