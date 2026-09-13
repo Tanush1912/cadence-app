@@ -7,6 +7,9 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  // Pin the trace root: stray lockfiles above this directory otherwise make
+  // Next infer a workspace root outside the project and mis-trace the bundle.
+  outputFileTracingRoot: __dirname,
   transpilePackages: ["gun"],
   headers: async () => [
     {
