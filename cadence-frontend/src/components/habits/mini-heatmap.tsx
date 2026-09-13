@@ -3,6 +3,10 @@
 const GRID_ACTIVE = "color-mix(in srgb, var(--primary) 82%, transparent)";
 const GRID_INACTIVE = "color-mix(in srgb, var(--primary) 10%, transparent)";
 const STRIP_ACTIVE = "color-mix(in srgb, var(--primary) 90%, transparent)";
+/** Inverted mode: clean days sit back so a slip is the only loud thing in the grid. */
+const CLEAN_FILL = "color-mix(in srgb, var(--primary) 20%, transparent)";
+const SLIP_FILL = "var(--destructive)";
+const UNTRACKED_FILL = "var(--surface-3)";
 const STRIP_DAYS = 14;
 
 /** Right-align `data` inside a fixed window, oldest first, dropping anything older. */
@@ -23,6 +27,8 @@ export function MiniHeatmap({
   days = 56,
   columns = 14,
   variant = "grid",
+  inverted = false,
+  activeFrom = 0,
 }: {
   data: boolean[];
   /** Ignored. Colour comes from --primary so it can never desync from the accent. */
@@ -30,15 +36,32 @@ export function MiniHeatmap({
   days?: number;
   columns?: number;
   variant?: "grid" | "compact";
+  /** Quit habits: `data` marks slips, not completions. Clean is the default state. */
+  inverted?: boolean;
+  /** Index of the first tracked day. Anything earlier predates the habit. */
+  activeFrom?: number;
 }) {
   if (variant === "compact") {
+    const strip = windowed(data, STRIP_DAYS);
+    const stripOffset = activeFrom - (days - STRIP_DAYS);
+
     return (
       <div className="mt-2 flex gap-[3px]">
-        {windowed(data, STRIP_DAYS).map((active, i) => (
+        {strip.map((active, i) => (
           <span
             key={i}
             className="block h-1 w-1 rounded-[1px]"
-            style={{ backgroundColor: active ? STRIP_ACTIVE : "var(--surface-3)" }}
+            style={{
+              backgroundColor: inverted
+                ? i < stripOffset
+                  ? UNTRACKED_FILL
+                  : active
+                    ? SLIP_FILL
+                    : CLEAN_FILL
+                : active
+                  ? STRIP_ACTIVE
+                  : UNTRACKED_FILL,
+            }}
           />
         ))}
       </div>
@@ -54,7 +77,17 @@ export function MiniHeatmap({
         <div
           key={i}
           className="aspect-square rounded-[2px]"
-          style={{ backgroundColor: active ? GRID_ACTIVE : GRID_INACTIVE }}
+          style={{
+            backgroundColor: inverted
+              ? i < activeFrom
+                ? UNTRACKED_FILL
+                : active
+                  ? SLIP_FILL
+                  : CLEAN_FILL
+              : active
+                ? GRID_ACTIVE
+                : GRID_INACTIVE,
+          }}
         />
       ))}
     </div>

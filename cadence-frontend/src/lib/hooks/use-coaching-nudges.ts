@@ -6,6 +6,7 @@ import { useGun } from "@/lib/gun/gun-provider";
 import { todayKey, addDays, fromDateKey } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
 import type { Habit } from "@/lib/types";
+import { isQuitHabit } from "@/lib/types";
 
 export interface CoachingNudge {
   habitId: string;
@@ -45,7 +46,7 @@ export function useCoachingNudges(
   return useMemo(() => {
     if (!logsLoaded) return {};
 
-    const habits = Object.values(rawHabits).filter((h) => !h.archived);
+    const habits = Object.values(rawHabits).filter((h) => !h.archived && !isQuitHabit(h));
     const today = todayKey();
     const nudges: Record<string, CoachingNudge> = {};
 

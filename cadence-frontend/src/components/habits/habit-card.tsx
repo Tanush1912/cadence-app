@@ -10,7 +10,9 @@ import { HabitIcon } from "@/lib/utils/habit-icons";
 import { useFriction } from "@/lib/hooks/use-friction";
 import { isEditable } from "@/lib/utils/dates";
 import { haptic } from "@/lib/utils/haptics";
-import type { Habit, Log, Streak, FrictionScore } from "@/lib/types";
+import { isQuitHabit, type Habit, type Log, type Streak, type FrictionScore } from "@/lib/types";
+import { quitStreakLabel, type QuitStreak } from "@/lib/hooks/use-streaks";
+import type { QuitHistory } from "@/lib/hooks/use-habits";
 
 const COLOR_MAP: Record<string, string> = {
   teal: "#2dd4bf",
@@ -45,6 +47,9 @@ export function HabitCard({
   onCalendar,
   minimumMode,
   nudge,
+  quitStreak,
+  quitHistory,
+  onSlip,
 }: {
   habit: Habit;
   log: Log | undefined;
@@ -59,9 +64,13 @@ export function HabitCard({
   onCalendar?: (habit: Habit) => void;
   minimumMode?: boolean;
   nudge?: import("@/lib/hooks/use-coaching-nudges").CoachingNudge | null;
+  quitStreak?: QuitStreak;
+  quitHistory?: QuitHistory;
+  onSlip?: (habit: Habit) => void;
 }) {
   const done = log?.done ?? false;
   const skipped = log?.skipped ?? false;
+  const quit = isQuitHabit(habit);
   const editable = isEditable(dateKey);
   const habitColor = habit.color || GROUP_FALLBACK_COLOR[habit.group] || "teal";
   const hexColor = COLOR_MAP[habitColor] || COLOR_MAP.teal;
@@ -76,7 +85,7 @@ export function HabitCard({
   const friction = useFriction(handleFrictionCommit);
 
   const handleToggle = useCallback(() => {
-    if (!editable) return;
+    if (quit || !editable) return;
     const nowDone = onToggle(habit.id);
     if (nowDone) {
       friction.show();
@@ -89,7 +98,7 @@ export function HabitCard({
       haptic("light");
       friction.reset();
     }
-  }, [editable, onToggle, habit.id, friction, checkControls]);
+  }, [quit, editable, onToggle, habit.id, friction, checkControls]);
 
   const x = useMotionValue(0);
   const dragRef = useRef<HTMLDivElement>(null);
@@ -99,7 +108,8 @@ export function HabitCard({
 
   const bind = useDrag(
     ({ active, movement: [mx], cancel }) => {
-      if (!editable && mx > 0) {
+      // A stray swipe on a quit habit would put a relapse on the record with no undo.
+      if ((quit || !editable) && mx > 0) {
         cancel();
         return;
       }
@@ -107,7 +117,7 @@ export function HabitCard({
       if (active) {
         x.set(mx);
       } else {
-        if (mx > SWIPE_THRESHOLD && editable) {
+        if (mx > SWIPE_THRESHOLD && editable && !quit) {
           handleToggle();
           haptic("success");
         }
@@ -122,7 +132,7 @@ export function HabitCard({
     {
       axis: "x",
       from: () => [x.get(), 0],
-      bounds: { left: -200, right: 140 },
+      bounds: { left: -200, right: quit ? 0 : 140 },
       rubberband: true,
     }
   );
@@ -133,8 +143,25 @@ export function HabitCard({
   };
 
   const streakLabel = streak && streak.current > 0 ? `${streak.current}d` : null;
+  const clean = quit ? quitStreakLabel(quitStreak) : null;
+  const slipHistory = quitHistory?.slips ?? [];
 
-  const checkControl = skipped && !done ? (
+  const checkControl = quit ? (
+    <motion.button
+      onClick={(e) => { e.stopPropagation(); if (editable) onSlip?.(habit); }}
+      disabled={!editable}
+      aria-label={`Log a slip for ${habit.name}`}
+      className={cn(
+        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-surface-3 bg-transparent text-ink-3 transition-colors hover:text-foreground",
+        !editable && "cursor-not-allowed opacity-40"
+      )}
+      whileTap={editable ? { scale: 0.92 } : undefined}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+        <path d="M5 12h14" />
+      </svg>
+    </motion.button>
+  ) : skipped && !done ? (
     <span className="px-2 text-label font-medium text-muted-foreground">skipped</span>
   ) : (
     <motion.button
@@ -191,16 +218,18 @@ export function HabitCard({
             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
           </svg>
         </motion.button>
-        <motion.button
-          onClick={() => { onSkip?.(habit); dismissActions(); }}
-          aria-label="Skip habit"
-          className="flex h-11 w-11 items-center justify-center rounded-sm bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25"
-          style={{ scale: actionScale }}
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="5 4 15 12 5 20 5 4" /><line x1="19" x2="19" y1="5" y2="19" />
-          </svg>
-        </motion.button>
+        {!quit && (
+          <motion.button
+            onClick={() => { onSkip?.(habit); dismissActions(); }}
+            aria-label="Skip habit"
+            className="flex h-11 w-11 items-center justify-center rounded-sm bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25"
+            style={{ scale: actionScale }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 4 15 12 5 20 5 4" /><line x1="19" x2="19" y1="5" y2="19" />
+            </svg>
+          </motion.button>
+        )}
         <motion.button
           onClick={() => { onArchive?.(habit); dismissActions(); }}
           aria-label="Archive habit"
@@ -230,36 +259,56 @@ export function HabitCard({
               <HabitIcon name={habit.name} size={17} />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-title font-semibold tracking-tight text-amber-400">
-                {habit.floor || habit.name}
+              <h3 className={cn(
+                "truncate text-title font-semibold tracking-tight",
+                quit ? "text-foreground" : "text-amber-400"
+              )}>
+                {quit ? habit.name : habit.floor || habit.name}
               </h3>
               <div className="mt-0.5 flex items-center gap-1.5 text-label">
-                <span className="truncate text-muted-foreground">{habit.name}</span>
-                {streakLabel && (
+                {clean ? (
+                  <span className={cn("truncate font-mono", clean.broke ? "text-destructive" : "text-muted-foreground")}>
+                    {clean.text}
+                  </span>
+                ) : (
+                  <span className="truncate text-muted-foreground">{habit.name}</span>
+                )}
+                {!quit && streakLabel && (
                   <>
                     <span className="text-ink-3">&middot;</span>
                     <span className="shrink-0 font-mono text-muted-foreground">{streakLabel}</span>
                   </>
                 )}
-                {nudge && (
+                {!quit && nudge && (
                   <>
                     <span className="text-ink-3">&middot;</span>
                     <span className="truncate text-amber-400">{nudge.message}</span>
                   </>
                 )}
               </div>
-              <div
-                className="-my-2 cursor-pointer py-2"
-                onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
-              >
-                <MiniHeatmap data={heatmapData} variant="compact" />
-              </div>
+              {quit ? (
+                <MiniHeatmap
+                  data={slipHistory}
+                  variant="compact"
+                  inverted
+                  activeFrom={quitHistory?.activeFrom ?? 0}
+                />
+              ) : (
+                <div
+                  className="-my-2 cursor-pointer py-2"
+                  onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
+                >
+                  <MiniHeatmap data={heatmapData} variant="compact" />
+                </div>
+              )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <FrictionDots
-                visible={friction.state === "showing"}
-                onSelect={friction.commit}
-              />
+              {!quit && (
+                <FrictionDots
+                  visible={friction.state === "showing"}
+                  onSelect={friction.commit}
+                />
+              )}
               {checkControl}
             </div>
           </div>
@@ -275,7 +324,14 @@ export function HabitCard({
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-title font-semibold tracking-tight">{habit.name}</h3>
-                {nudge ? (
+                {clean ? (
+                  <p className={cn(
+                    "truncate font-mono text-label",
+                    clean.broke ? "text-destructive" : "text-muted-foreground"
+                  )}>
+                    {clean.text}
+                  </p>
+                ) : nudge ? (
                   <div className="mt-0.5 flex items-center gap-1.5">
                     {(nudge.type === "personal-best" || nudge.type === "consistent") ? (
                       <span className="text-label font-medium" style={{ color: "var(--primary)" }}>
@@ -311,11 +367,13 @@ export function HabitCard({
                 ) : null}
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <FrictionDots
-                  visible={friction.state === "showing"}
-                  onSelect={friction.commit}
-                />
-                {streakLabel && (
+                {!quit && (
+                  <FrictionDots
+                    visible={friction.state === "showing"}
+                    onSelect={friction.commit}
+                  />
+                )}
+                {!quit && streakLabel && (
                   <span className="font-mono text-label text-muted-foreground">
                     {streakLabel}
                   </span>
@@ -324,12 +382,22 @@ export function HabitCard({
               </div>
             </div>
 
-            <div
-              className="cursor-pointer px-4 pt-0.5 pb-3"
-              onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
-            >
-              <MiniHeatmap data={heatmapData} />
-            </div>
+            {quit ? (
+              <div className="px-4 pt-0.5 pb-3">
+                <MiniHeatmap
+                  data={slipHistory}
+                  inverted
+                  activeFrom={quitHistory?.activeFrom ?? 0}
+                />
+              </div>
+            ) : (
+              <div
+                className="cursor-pointer px-4 pt-0.5 pb-3"
+                onClick={(e) => { e.stopPropagation(); onCalendar?.(habit); }}
+              >
+                <MiniHeatmap data={heatmapData} />
+              </div>
+            )}
           </>
         )}
       </motion.div>

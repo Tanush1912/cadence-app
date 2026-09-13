@@ -6,6 +6,8 @@ import { useSharedData } from "@/lib/gun/data-provider";
 import { todayKey, addDays, fromDateKey } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
 import { stripGunMeta } from "@/lib/gun/gun-utils";
+import { existedOn } from "./use-streaks";
+import { isQuitHabit, slipTrigger } from "@/lib/types";
 
 export interface RootCause {
   habitId: string;
@@ -13,7 +15,16 @@ export interface RootCause {
   pattern: string;
   confidence: "high" | "medium";
   suggestion?: string;
+  kind: "miss" | "slip";
 }
+
+const TRIGGER_SUGGESTIONS: Record<string, string> = {
+  stress: "Have a planned response ready for the moments that spike",
+  bored: "Line up something to fill the gap this was filling",
+  social: "Decide in advance what you do when everyone else is",
+  craving: "Ride it out for ten minutes before you decide",
+  autopilot: "Add friction so it cannot happen without you noticing",
+};
 
 const KEYWORDS: Record<string, string[]> = {
   tired: ["tired", "exhausted", "fatigue", "sleepy", "drained"],
@@ -79,6 +90,63 @@ export function useRootCauses(): { causes: RootCause[]; loading: boolean } {
     const results: RootCause[] = [];
 
     for (const habit of habits) {
+      if (isQuitHabit(habit)) {
+        const slipDays: string[] = [];
+        const triggers: string[] = [];
+
+        for (let i = 0; i <= 14; i++) {
+          const dk = addDays(today, -i);
+          if (!existedOn(habit, dk)) break;
+          const log = allLogs[dk]?.[habit.id];
+          if (!log?.slipped) continue;
+          slipDays.push(dk);
+          const trigger = slipTrigger(log.slipReason);
+          if (trigger) triggers.push(trigger.toLowerCase());
+        }
+
+        if (slipDays.length === 0) continue;
+
+        const triggerCounts: Record<string, number> = {};
+        for (const t of triggers) triggerCounts[t] = (triggerCounts[t] || 0) + 1;
+
+        for (const [trigger, count] of Object.entries(triggerCounts)) {
+          if (count < 2) continue;
+          results.push({
+            habitId: habit.id,
+            habitName: habit.name,
+            pattern: `${count} of your recent slips were ${trigger}`,
+            confidence: count >= 3 ? "high" : "medium",
+            suggestion: TRIGGER_SUGGESTIONS[trigger],
+            kind: "slip",
+          });
+        }
+
+        const slipKeywordHits: Record<string, number> = {};
+        for (const dk of slipDays) {
+          const text = journalEntries[dk]?.toLowerCase() || "";
+          if (!text) continue;
+          for (const [category, words] of Object.entries(KEYWORDS)) {
+            if (words.some((w) => text.includes(w))) {
+              slipKeywordHits[category] = (slipKeywordHits[category] || 0) + 1;
+            }
+          }
+        }
+
+        for (const [category, count] of Object.entries(slipKeywordHits)) {
+          if (count < 2) continue;
+          results.push({
+            habitId: habit.id,
+            habitName: habit.name,
+            pattern: `You slip on ${habit.name} when you're ${category}`,
+            confidence: count >= 3 ? "high" : "medium",
+            suggestion: `Plan for ${category} days before they arrive`,
+            kind: "slip",
+          });
+        }
+
+        continue;
+      }
+
       let scheduled = 0;
       let completed = 0;
       const missedDays: string[] = [];
@@ -136,6 +204,7 @@ export function useRootCauses(): { causes: RootCause[]; loading: boolean } {
             pattern: `You miss ${habit.name} when you're ${category}`,
             confidence: count >= 3 ? "high" : "medium",
             suggestion: SUGGESTIONS[category],
+            kind: "miss",
           });
         }
       }
@@ -156,6 +225,7 @@ export function useRootCauses(): { causes: RootCause[]; loading: boolean } {
             pattern: `You skip ${habit.name} because "${reason}"`,
             confidence: count >= 3 ? "high" : "medium",
             suggestion: `Consider adapting ${habit.name} for days when you're ${reason}`,
+            kind: "miss",
           });
         }
       }
@@ -173,6 +243,7 @@ export function useRootCauses(): { causes: RootCause[]; loading: boolean } {
               pattern: `Friction has been high for ${habit.name} recently`,
               confidence: frictionCount >= 3 ? "high" : "medium",
               suggestion: "Consider reducing the scope or making it easier to start",
+              kind: "miss",
             });
           }
         }

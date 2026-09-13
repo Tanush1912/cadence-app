@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useSharedData } from "@/lib/gun/data-provider";
 import { todayKey, addDays } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
+import { isQuitHabit } from "@/lib/types";
 
 export interface NextAction {
   message: string;
@@ -21,7 +22,7 @@ export function useNextAction(
   return useMemo(() => {
     if (!logsLoaded) return null;
 
-    const habits = Object.values(rawHabits).filter((h) => !h.archived);
+    const habits = Object.values(rawHabits).filter((h) => !h.archived && !isQuitHabit(h));
     if (habits.length === 0) return null;
 
     const today = todayKey();

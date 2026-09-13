@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import type { ReactNode } from "react";
-import { useStats, type DayCell, type HabitStat } from "@/lib/hooks/use-stats";
+import { useStats, type DayCell, type HabitStat, type QuitCell, type QuitStat } from "@/lib/hooks/use-stats";
 import { useSystemHealth } from "@/lib/hooks/use-system-health";
 import { useRootCauses } from "@/lib/hooks/use-root-causes";
 import { useHabitDependencies } from "@/lib/hooks/use-habit-dependencies";
@@ -26,6 +26,11 @@ const LEVEL_FILLS = [
   "color-mix(in srgb, var(--primary) 55%, transparent)",
   "var(--primary)",
 ];
+
+// Inverted grid: clean sits back, a slip is the only loud thing in it.
+const QUIT_UNTRACKED = "var(--secondary)";
+const QUIT_CLEAN = "color-mix(in srgb, var(--primary) 20%, transparent)";
+const QUIT_SLIP = "var(--destructive)";
 
 const TREND_ARROWS: Record<string, string> = { up: "↑", down: "↓", flat: "" };
 
@@ -196,6 +201,100 @@ function ConsistencyRow({ habit, rank, onArchive }: {
   );
 }
 
+function QuitRow({ stat, rank }: { stat: QuitStat; rank: number }) {
+  const broke = stat.cleanDays === 0;
+
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <span className="w-4 shrink-0 text-right font-mono text-label text-ink-3">{rank}</span>
+      <span className="shrink-0 text-muted-foreground">
+        <HabitIcon name={stat.name} size={16} />
+      </span>
+      <span className="flex-1 truncate text-body">{stat.name}</span>
+      <span
+        className={cn(
+          "shrink-0 font-mono text-micro",
+          broke ? "text-destructive" : "text-muted-foreground"
+        )}
+      >
+        {stat.cleanDays}d
+      </span>
+      <div className="h-1 w-16 shrink-0 overflow-hidden rounded-full bg-secondary">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${stat.cleanRate}%`,
+            backgroundColor: broke ? "var(--destructive)" : "var(--primary)",
+          }}
+        />
+      </div>
+      <span className="w-9 shrink-0 text-right font-mono text-label text-muted-foreground">
+        {stat.cleanRate}%
+      </span>
+    </div>
+  );
+}
+
+function quitFill(cell: QuitCell): string {
+  if (!cell.tracked) return QUIT_UNTRACKED;
+  return cell.slipped ? QUIT_SLIP : QUIT_CLEAN;
+}
+
+function QuitHeatmap({ stat }: { stat: QuitStat }) {
+  const weeks: QuitCell[][] = [];
+  let week: QuitCell[] = [];
+
+  for (const cell of stat.cells) {
+    week.push(cell);
+    if (week.length === 7) {
+      weeks.push(week);
+      week = [];
+    }
+  }
+  if (week.length > 0) weeks.push(week);
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <p className="mb-3 text-label text-muted-foreground">
+        {stat.name} <span className="text-ink-3">&middot;</span> last {weeks.length} weeks
+      </p>
+      <div className="overflow-x-auto no-scrollbar pb-1">
+        <div className="flex" style={{ gap: CELL_GAP, minWidth: weeks.length * COLUMN_PITCH }}>
+          {weeks.map((w, wi) => (
+            <div key={wi} className="flex flex-col" style={{ gap: CELL_GAP }}>
+              {w.map((cell) => (
+                <div
+                  key={cell.dateKey}
+                  className="rounded-[2px]"
+                  style={{ width: CELL_SIZE, height: CELL_SIZE, backgroundColor: quitFill(cell) }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between text-micro text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <span>Clean</span>
+          <div
+            className="rounded-[2px]"
+            style={{ width: CELL_SIZE - 2, height: CELL_SIZE - 2, backgroundColor: QUIT_CLEAN }}
+          />
+          <div
+            className="rounded-[2px]"
+            style={{ width: CELL_SIZE - 2, height: CELL_SIZE - 2, backgroundColor: QUIT_SLIP }}
+          />
+          <span>Slipped</span>
+        </div>
+        <span>
+          {stat.slips} slip{stat.slips === 1 ? "" : "s"} <span className="text-ink-3">&middot;</span>{" "}
+          longest {stat.longestClean}d
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function LinkRow({ children }: { children: ReactNode }) {
   return <div className="border-b border-border py-3 last:border-b-0">{children}</div>;
 }
@@ -222,6 +321,8 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
     );
   }
 
+  const missCauses = rootCauses.filter((c) => c.kind !== "slip");
+  const slipCauses = rootCauses.filter((c) => c.kind === "slip");
   const hasDayPattern = stats.bestDay !== "-" && stats.worstDay !== "-";
   const hasMovers = stats.keystoneHabits.length > 0 || boosters.length > 0 || breakers.length > 0;
 
@@ -293,6 +394,22 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
         </>
       )}
 
+      {stats.quitStats.length > 0 && (
+        <>
+          <GroupLabel>Staying clean</GroupLabel>
+          <div className="px-5">
+            {stats.quitStats.map((q, i) => (
+              <QuitRow key={q.id} stat={q} rank={i + 1} />
+            ))}
+          </div>
+          <div className="space-y-3 px-5 pt-4">
+            {stats.quitStats.map((q) => (
+              <QuitHeatmap key={q.id} stat={q} />
+            ))}
+          </div>
+        </>
+      )}
+
       {hasMovers && (
         <>
           <GroupLabel>What moves what</GroupLabel>
@@ -339,11 +456,34 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
         </>
       )}
 
-      {rootCauses.length > 0 && (
+      {missCauses.length > 0 && (
         <>
           <GroupLabel>Why you miss</GroupLabel>
           <div className="px-5">
-            {rootCauses.map((cause, i) => (
+            {missCauses.map((cause, i) => (
+              <LinkRow key={`${cause.habitId}-${i}`}>
+                <div className="flex flex-wrap items-center gap-2 text-body">
+                  <span className="text-muted-foreground"><HabitIcon name={cause.habitName} size={16} /></span>
+                  <span>{cause.habitName}</span>
+                  <span className="text-label text-muted-foreground">{cause.pattern}</span>
+                  {cause.confidence === "high" && (
+                    <span className="ml-auto font-mono text-micro text-ink-3">high</span>
+                  )}
+                </div>
+                {cause.suggestion && (
+                  <p className="mt-1 text-label text-muted-foreground">{cause.suggestion}</p>
+                )}
+              </LinkRow>
+            ))}
+          </div>
+        </>
+      )}
+
+      {slipCauses.length > 0 && (
+        <>
+          <GroupLabel>Why you slip</GroupLabel>
+          <div className="px-5">
+            {slipCauses.map((cause, i) => (
               <LinkRow key={`${cause.habitId}-${i}`}>
                 <div className="flex flex-wrap items-center gap-2 text-body">
                   <span className="text-muted-foreground"><HabitIcon name={cause.habitName} size={16} /></span>

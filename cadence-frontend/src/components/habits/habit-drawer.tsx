@@ -5,6 +5,7 @@ import {
   Drawer,
   DrawerContent,
   DrawerHeader,
+  DrawerBody,
   DrawerTitle,
   DrawerFooter,
   DrawerClose,
@@ -15,12 +16,17 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useGun } from "@/lib/gun/gun-provider";
 import { generateId } from "@/lib/gun/gun-utils";
-import type { Habit, GroupName } from "@/lib/types";
+import type { Habit, GroupName, HabitType } from "@/lib/types";
 
 const GROUPS: { id: GroupName; label: string }[] = [
   { id: "morning", label: "Morning" },
   { id: "evening", label: "Evening" },
   { id: "anytime", label: "Anytime" },
+];
+
+const TYPES: { id: HabitType; label: string; hint: string }[] = [
+  { id: "build", label: "Build", hint: "Do it each day" },
+  { id: "quit", label: "Quit", hint: "Avoid it each day" },
 ];
 
 const FREQUENCIES = [
@@ -53,6 +59,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
   const gun = useGun();
   const isEditing = !!editingHabit;
 
+  const [type, setType] = useState<HabitType>("build");
   const [name, setName] = useState("");
   const [group, setGroup] = useState<GroupName>("morning");
   const [frequency, setFrequency] = useState("daily");
@@ -61,12 +68,14 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
   useEffect(() => {
     if (editingHabit) {
+      setType(editingHabit.type === "quit" ? "quit" : "build");
       setName(editingHabit.name);
       setGroup(editingHabit.group);
       setFrequency(editingHabit.frequency);
       setFloor(editingHabit.floor || "");
       setColor(editingHabit.color || "teal");
     } else {
+      setType("build");
       setName("");
       setGroup("morning");
       setFrequency("daily");
@@ -79,16 +88,20 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
     if (!gun || !name.trim()) return;
 
     const id = editingHabit?.id || generateId();
+    const isQuit = type === "quit";
+
+    // Always written, so switching a habit back to Build clears the old value.
     gun.get("habits").get(id).put({
       name: name.trim(),
       emoji: "",
       group,
-      frequency,
-      floor: floor.trim() || "",
+      frequency: isQuit ? "daily" : frequency,
+      floor: isQuit ? "" : floor.trim() || "",
       color,
       order: editingHabit?.order ?? Date.now(),
       archived: false,
       createdAt: editingHabit?.createdAt ?? Date.now(),
+      type: isQuit ? "quit" : "build",
     });
 
     onOpenChange(false);
@@ -104,18 +117,44 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="bg-[#141414] border-[#262626] max-h-[85dvh]">
-        <div className="mx-auto w-full max-w-md overflow-y-auto">
-          <DrawerHeader>
-            <DrawerTitle className="text-foreground">
-              {isEditing ? "Edit Habit" : "New Habit"}
-            </DrawerTitle>
-          </DrawerHeader>
+      <DrawerContent>
+        <DrawerHeader className="mx-auto w-full max-w-md">
+          <DrawerTitle className="text-foreground">
+            {isEditing ? "Edit Habit" : "New Habit"}
+          </DrawerTitle>
+        </DrawerHeader>
 
-          <div className="px-4 space-y-5">
+        <DrawerBody className="mx-auto w-full max-w-md px-4 pb-4 space-y-5">
+            {/* Type */}
+            <div>
+              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
+                Type
+              </Label>
+              <div className="flex gap-2">
+                {TYPES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setType(t.id)}
+                    aria-pressed={type === t.id}
+                    className={cn(
+                      "flex-1 min-h-11 px-3 py-2 rounded-sm text-left transition-all",
+                      type === t.id
+                        ? "bg-foreground text-background"
+                        : "bg-secondary text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <span className="block text-body font-medium">{t.label}</span>
+                    <span className={cn("block text-micro", type === t.id ? "opacity-70" : "text-ink-3")}>
+                      {t.hint}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Name */}
             <div>
-              <Label htmlFor="habit-name" className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label htmlFor="habit-name" className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
                 Name
               </Label>
               <Input
@@ -128,8 +167,9 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
             </div>
 
             {/* Floor (minimum version) */}
+            {type !== "quit" && (
             <div>
-              <Label htmlFor="habit-floor" className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label htmlFor="habit-floor" className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
                 Minimum version (optional)
               </Label>
               <Input
@@ -140,10 +180,11 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
                 className="bg-[#1a1a1a] border-[#262626] text-foreground h-11"
               />
             </div>
+            )}
 
             {/* Color */}
             <div>
-              <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
                 Color
               </Label>
               <div className="flex gap-2.5">
@@ -166,7 +207,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
             {/* Group */}
             <div>
-              <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
                 Time of day
               </Label>
               <div className="flex gap-2">
@@ -188,8 +229,9 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
             </div>
 
             {/* Frequency */}
+            {type !== "quit" && (
             <div>
-              <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
                 Frequency
               </Label>
               <div className="flex flex-wrap gap-2">
@@ -209,9 +251,17 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
                 ))}
               </div>
             </div>
-          </div>
+            )}
 
-          <DrawerFooter className="mt-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
+            {type === "quit" && (
+              <p className="text-micro text-ink-3">
+                A quit habit runs every day and has no smaller version, so frequency and minimum
+                version do not apply.
+              </p>
+            )}
+        </DrawerBody>
+
+          <DrawerFooter className="mx-auto w-full max-w-md" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
             <Button
               onClick={handleSave}
               disabled={!name.trim()}
@@ -234,7 +284,6 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
               </Button>
             </DrawerClose>
           </DrawerFooter>
-        </div>
       </DrawerContent>
     </Drawer>
   );

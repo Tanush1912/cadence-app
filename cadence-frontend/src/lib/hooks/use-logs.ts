@@ -36,6 +36,10 @@ export function useLogs(dateKey: string) {
           friction: (cleaned.friction as FrictionScore) ?? null,
           retroactive: !!cleaned.retroactive,
           completedAt: (cleaned.completedAt as number) ?? null,
+          skipped: !!cleaned.skipped,
+          skipReason: (cleaned.skipReason as string) ?? "",
+          slipped: !!cleaned.slipped,
+          slipReason: (cleaned.slipReason as string) ?? "",
         };
       }
 
@@ -84,6 +88,32 @@ export function useLogs(dateKey: string) {
     [gun, logs, dateKey, updateSharedLog]
   );
 
+  const logSlip = useCallback(
+    (habitId: string, reason: string) => {
+      if (!gun) return;
+
+      const newLog: Log = {
+        done: false,
+        friction: null,
+        retroactive: dateKey !== todayKey(),
+        completedAt: Date.now(),
+        slipped: true,
+        slipReason: reason,
+      };
+
+      setLogs((prev) => ({ ...prev, [habitId]: newLog }));
+      accumulator.current[habitId] = newLog;
+      updateSharedLog(dateKey, habitId, newLog);
+
+      gun.get("logs").get(dateKey).get(habitId).put({
+        slipped: true,
+        slipReason: reason,
+        completedAt: newLog.completedAt,
+      });
+    },
+    [gun, dateKey, updateSharedLog]
+  );
+
   const setFriction = useCallback(
     (habitId: string, score: FrictionScore) => {
       if (!gun) return;
@@ -101,5 +131,5 @@ export function useLogs(dateKey: string) {
     [gun, dateKey]
   );
 
-  return { logs, loading, toggleLog, setFriction };
+  return { logs, loading, toggleLog, logSlip, setFriction };
 }
