@@ -56,7 +56,7 @@ export function VoiceButton({
       {/* Status label */}
       {state === "done" && (
         <motion.span
-          className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] whitespace-nowrap"
+          className="absolute -top-6 left-1/2 -translate-x-1/2 text-micro whitespace-nowrap"
           style={{ color: "var(--primary)" }}
           initial={{ opacity: 1 }}
           animate={{ opacity: 0 }}

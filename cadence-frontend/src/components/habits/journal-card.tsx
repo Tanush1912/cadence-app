@@ -262,7 +262,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
 
             {/* Errors */}
             {(transcribeError || recorderError) && (
-              <p className="px-4 pb-2 text-[10px] text-red-400">
+              <p className="px-4 pb-2 text-micro text-red-400">
                 {transcribeError || recorderError}
               </p>
             )}
@@ -279,7 +279,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
                   + add mood
                 </button>
               )}
-              <span className="text-[10px] text-muted-foreground/30 font-mono">
+              <span className="text-micro text-muted-foreground/30 font-mono">
                 {text.length}
               </span>
             </div>

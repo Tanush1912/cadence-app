@@ -15,8 +15,6 @@ export function AppHeader({
   onToggleMinimumMode,
   completed = 0,
   total = 0,
-  quitHeld = 0,
-  quitTotal = 0,
 }: {
   selectedDate: string;
   onAdd?: () => void;
@@ -25,8 +23,6 @@ export function AppHeader({
   onToggleMinimumMode?: () => void;
   completed?: number;
   total?: number;
-  quitHeld?: number;
-  quitTotal?: number;
 }) {
   const dateDisplay = fromDateKey(selectedDate).toLocaleDateString("en-US", {
     weekday: "long",
@@ -86,14 +82,6 @@ export function AppHeader({
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </button>
-          )}
-          {quitTotal > 0 && (
-            <span
-              className="shrink-0 font-mono text-micro text-muted-foreground"
-              title="Quit habits are not counted in the ring"
-            >
-              {quitHeld} held
-            </span>
           )}
           <ProgressRing completed={completed} total={total} minimumMode={minimumMode} />
         </div>

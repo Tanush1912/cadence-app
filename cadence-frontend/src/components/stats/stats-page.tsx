@@ -354,7 +354,7 @@ export function StatsPage({ onReflect }: { onReflect?: () => void } = {}) {
           </div>
         )}
 
-        {!health.loading && (
+        {!health.loading && health.score >= 0 && (
           <div className="mt-1 flex flex-wrap items-center gap-x-2 text-label text-muted-foreground">
             <span>System health <Fact>{health.score}</Fact></span>
             <Separator />

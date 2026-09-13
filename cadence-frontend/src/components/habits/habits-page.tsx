@@ -115,6 +115,13 @@ export function HabitsPage() {
     setCalendarOpen(true);
   }, []);
 
+  const handleSearchHabit = useCallback((habitId: string) => {
+    const habit = rawHabits[habitId];
+    if (!habit) return;
+    setCalendarHabit(habit);
+    setCalendarOpen(true);
+  }, [rawHabits]);
+
   const handleAddNew = useCallback(() => {
     setEditingHabit(null);
     setDrawerOpen(true);
@@ -187,8 +194,6 @@ export function HabitsPage() {
         onToggleMinimumMode={isToday(selectedDate) ? toggleMinimumMode : undefined}
         completed={completed}
         total={total}
-        quitHeld={quitHeld}
-        quitTotal={quitTotal}
       />
 
       {/* One banner slot, highest priority wins — modes never stack */}
@@ -359,6 +364,7 @@ export function HabitsPage() {
         open={searchOpen}
         onOpenChange={setSearchOpen}
         onSelectDate={setSelectedDate}
+        onSelectHabit={handleSearchHabit}
       />
 
       <SkipDrawer

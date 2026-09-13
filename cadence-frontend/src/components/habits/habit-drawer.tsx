@@ -127,7 +127,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
         <DrawerBody className="mx-auto w-full max-w-md px-4 pb-4 space-y-5">
             {/* Type */}
             <div>
-              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label className="text-micro text-ink-3 mb-2 block">
                 Type
               </Label>
               <div className="flex gap-2">
@@ -154,7 +154,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
             {/* Name */}
             <div>
-              <Label htmlFor="habit-name" className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label htmlFor="habit-name" className="text-micro text-ink-3 mb-2 block">
                 Name
               </Label>
               <Input
@@ -169,7 +169,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
             {/* Floor (minimum version) */}
             {type !== "quit" && (
             <div>
-              <Label htmlFor="habit-floor" className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label htmlFor="habit-floor" className="text-micro text-ink-3 mb-2 block">
                 Minimum version (optional)
               </Label>
               <Input
@@ -184,7 +184,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
             {/* Color */}
             <div>
-              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label className="text-micro text-ink-3 mb-2 block">
                 Color
               </Label>
               <div className="flex gap-2.5">
@@ -207,7 +207,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
 
             {/* Group */}
             <div>
-              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label className="text-micro text-ink-3 mb-2 block">
                 Time of day
               </Label>
               <div className="flex gap-2">
@@ -231,7 +231,7 @@ export function HabitDrawer({ open, onOpenChange, editingHabit, onSaved }: Habit
             {/* Frequency */}
             {type !== "quit" && (
             <div>
-              <Label className="text-micro text-muted-foreground uppercase tracking-wide mb-2 block">
+              <Label className="text-micro text-ink-3 mb-2 block">
                 Frequency
               </Label>
               <div className="flex flex-wrap gap-2">
