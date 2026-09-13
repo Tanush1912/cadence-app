@@ -16,7 +16,7 @@ export function AppShell() {
 
   return (
     <AccentProvider>
-    <div className="min-h-[100dvh] bg-[#0a0a0a] text-foreground">
+    <div className="min-h-[100dvh] bg-background text-foreground">
       <div className={activeTab === "habits" ? "h-[100dvh] overflow-hidden" : "hidden"}>
         <HabitsPage />
       </div>

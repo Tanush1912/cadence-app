@@ -18,16 +18,19 @@ export function CategoryFilter({
   onSelect: (category: GroupName | "all") => void;
 }) {
   return (
-    <div className="flex gap-2 px-5 py-3 overflow-x-auto no-scrollbar">
+    <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 py-3">
       {CATEGORIES.map((cat) => (
         <button
           key={cat.id}
           onClick={() => onSelect(cat.id)}
+          aria-pressed={selected === cat.id}
           className={cn(
-            "px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all shrink-0",
+            // 44px hit area over a ~30px pill, without growing the visual.
+            "relative shrink-0 rounded-full px-3.5 py-1.5 text-label font-medium whitespace-nowrap transition-all",
+            "after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']",
             selected === cat.id
-              ? "text-[#0a0a0a]"
-              : "bg-[#1a1a1a] text-muted-foreground hover:text-foreground"
+              ? "text-primary-foreground"
+              : "bg-secondary text-muted-foreground hover:text-foreground"
           )}
           style={selected === cat.id ? { backgroundColor: "var(--primary)" } : undefined}
         >

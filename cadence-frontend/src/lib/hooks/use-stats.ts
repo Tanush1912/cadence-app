@@ -4,7 +4,10 @@ import { useMemo } from "react";
 import { useSharedData } from "@/lib/gun/data-provider";
 import { todayKey, addDays, fromDateKey } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
-import type { Habit } from "@/lib/types";
+import { existedOn, quitStreak } from "./use-streaks";
+import { isQuitHabit } from "@/lib/types";
+
+const QUIT_WINDOW_DAYS = 182;
 
 export interface HabitStat {
   id: string;
@@ -44,6 +47,23 @@ export interface DayCell {
   total: number;
 }
 
+export interface QuitCell {
+  dateKey: string;
+  slipped: boolean;
+  tracked: boolean;
+}
+
+export interface QuitStat {
+  id: string;
+  name: string;
+  cleanDays: number;
+  cleanRate: number;
+  trackedDays: number;
+  slips: number;
+  longestClean: number;
+  cells: QuitCell[];
+}
+
 export interface StatsData {
   loading: boolean;
   daysTracked: number;
@@ -56,6 +76,7 @@ export interface StatsData {
   heatmapCells: DayCell[];
   keystoneHabits: KeystoneHabit[];
   habitTimings: HabitTiming[];
+  quitStats: QuitStat[];
 }
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -72,6 +93,7 @@ const EMPTY_STATS: StatsData = {
   heatmapCells: [],
   keystoneHabits: [],
   habitTimings: [],
+  quitStats: [],
 };
 
 function formatHour(h: number): string {
@@ -87,10 +109,58 @@ export function useStats(): StatsData {
   return useMemo(() => {
     if (habitsLoading || !logsLoaded) return { ...EMPTY_STATS, loading: true };
 
-    const habits = Object.values(rawHabits).filter((h) => !h.archived);
-    if (habits.length === 0) return EMPTY_STATS;
+    const active = Object.values(rawHabits).filter((h) => !h.archived);
+    if (active.length === 0) return EMPTY_STATS;
 
     const today = todayKey();
+
+    // Quit habits are measured as days clean, never as a completion rate, so they are
+    // held out of every build metric below rather than reading as 0% forever.
+    const habits = active.filter((h) => !isQuitHabit(h));
+    const quitHabits = active.filter((h) => isQuitHabit(h));
+
+    const quitStats: QuitStat[] = quitHabits
+      .map((h) => {
+        let trackedDays = 0;
+        let slips = 0;
+        let longestClean = 0;
+        let run = 0;
+
+        const cells: QuitCell[] = [];
+        for (let i = QUIT_WINDOW_DAYS - 1; i >= 0; i--) {
+          const dateKey = addDays(today, -i);
+          const tracked = existedOn(h, dateKey);
+          const slipped = tracked && !!allLogs[dateKey]?.[h.id]?.slipped;
+
+          if (tracked) {
+            trackedDays++;
+            if (slipped) {
+              slips++;
+              run = 0;
+            } else {
+              run++;
+              if (run > longestClean) longestClean = run;
+            }
+          }
+
+          cells.push({ dateKey, slipped, tracked });
+        }
+
+        return {
+          id: h.id,
+          name: h.name,
+          cleanDays: quitStreak(h, allLogs, today).clean,
+          cleanRate: trackedDays > 0 ? Math.round(((trackedDays - slips) / trackedDays) * 100) : 100,
+          trackedDays,
+          slips,
+          longestClean,
+          cells,
+        };
+      })
+      .sort((a, b) => b.cleanRate - a.cleanRate);
+
+    if (habits.length === 0) return { ...EMPTY_STATS, quitStats };
+
     const dateKeys: string[] = [];
     for (let i = 364; i >= 0; i--) dateKeys.push(addDays(today, -i));
 
@@ -330,6 +400,7 @@ export function useStats(): StatsData {
       heatmapCells: dayCells,
       keystoneHabits,
       habitTimings,
+      quitStats,
     };
   }, [rawHabits, allLogs, habitsLoading, logsLoaded]);
 }

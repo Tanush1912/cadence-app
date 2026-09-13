@@ -50,17 +50,20 @@ export function BottomTabs({
   return (
     <div className="fixed z-50 flex justify-center px-4 pointer-events-none left-0 right-0" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
       <div className="pointer-events-auto">
-        <div className="flex items-center gap-1 bg-[#1a1a1a]/90 backdrop-blur-lg rounded-full px-2 py-1.5 shadow-lg shadow-black/30">
+        <div className="flex items-center gap-1 rounded-full border border-border bg-secondary/90 px-2 py-1.5 shadow-lg shadow-black/30 backdrop-blur-lg">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => { haptic("light"); onTabChange(tab.id); }}
+                aria-label={tab.label}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all",
+                  // 44px hit area over a 36px tab, without growing the bar.
+                  "relative flex items-center gap-1.5 rounded-full px-4 py-2 text-label font-medium transition-all",
+                  "after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']",
                   isActive
-                    ? "text-[#0a0a0a]"
+                    ? "text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 style={isActive ? { backgroundColor: "var(--primary)" } : undefined}

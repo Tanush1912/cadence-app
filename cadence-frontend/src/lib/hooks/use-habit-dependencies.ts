@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useSharedData } from "@/lib/gun/data-provider";
 import { todayKey, addDays } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
+import { isQuitHabit } from "@/lib/types";
 
 export interface HabitDependency {
   sourceId: string;
@@ -30,7 +31,7 @@ export function useHabitDependencies(): UseHabitDependenciesResult {
       return { boosters: [], breakers: [], loading: true };
     }
 
-    const activeHabits = Object.values(habits).filter((h) => !h.archived);
+    const activeHabits = Object.values(habits).filter((h) => !h.archived && !isQuitHabit(h));
     if (activeHabits.length < 2) {
       return { boosters: [], breakers: [], loading: false };
     }

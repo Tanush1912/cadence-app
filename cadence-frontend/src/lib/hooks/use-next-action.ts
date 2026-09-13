@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useSharedData } from "@/lib/gun/data-provider";
 import { todayKey, addDays } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
+import { isQuitHabit } from "@/lib/types";
 
 export interface NextAction {
   message: string;
@@ -21,7 +22,7 @@ export function useNextAction(
   return useMemo(() => {
     if (!logsLoaded) return null;
 
-    const habits = Object.values(rawHabits).filter((h) => !h.archived);
+    const habits = Object.values(rawHabits).filter((h) => !h.archived && !isQuitHabit(h));
     if (habits.length === 0) return null;
 
     const today = todayKey();
@@ -39,7 +40,7 @@ export function useNextAction(
           const targetDone = logs[dep.targetId]?.done;
           if (!targetDone) {
             return {
-              message: `${dep.sourceName.toLowerCase()} — supports ${dep.targetName.toLowerCase()}`,
+              message: `${dep.sourceName.toLowerCase()} first, it supports ${dep.targetName.toLowerCase()}`,
               habitId: dep.sourceId,
             };
           }
@@ -70,7 +71,7 @@ export function useNextAction(
       const priorRate = priorSched7 > 0 ? (prior7 / priorSched7) * 100 : 100;
 
       if (priorRate >= 50 && (priorRate - recentRate) >= 20) {
-        const floorHint = h.floor ? ` — ${h.floor} is enough` : "";
+        const floorHint = h.floor ? `, ${h.floor} is enough` : "";
         return {
           message: `${h.name.toLowerCase()} slipping${floorHint}`,
           habitId: h.id,
@@ -83,7 +84,7 @@ export function useNextAction(
       const morningHabit = scheduled.find((h) => h.group === "morning" && !logs[h.id]?.done);
       if (morningHabit) {
         return {
-          message: `morning — ${morningHabit.name.toLowerCase()}`,
+          message: `morning: ${morningHabit.name.toLowerCase()}`,
           habitId: morningHabit.id,
         };
       }
@@ -93,7 +94,7 @@ export function useNextAction(
       const eveningHabit = scheduled.find((h) => h.group === "evening" && !logs[h.id]?.done);
       if (eveningHabit) {
         return {
-          message: `evening — ${eveningHabit.name.toLowerCase()}`,
+          message: `evening: ${eveningHabit.name.toLowerCase()}`,
           habitId: eveningHabit.id,
         };
       }

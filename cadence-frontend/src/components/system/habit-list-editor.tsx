@@ -1,37 +1,27 @@
 "use client";
 
-import { useMemo } from "react";
-import { useGunMap } from "@/lib/hooks/use-gun-node";
 import { useGun } from "@/lib/gun/gun-provider";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
+import { SheetAddRow, SheetGroupLabel } from "./settings-row";
 import type { Habit } from "@/lib/types";
-import { Pencil, Archive, ArchiveRestore, ChevronDown, Plus } from "lucide-react";
+import { Pencil, Archive, ArchiveRestore } from "lucide-react";
 import { HabitIcon } from "@/lib/utils/habit-icons";
 
 interface HabitListEditorProps {
+  active: Habit[];
+  archived: Habit[];
+  loading?: boolean;
   onEdit?: (habit: Habit) => void;
   onAdd?: () => void;
 }
 
-export function HabitListEditor({ onEdit, onAdd }: HabitListEditorProps) {
+export function HabitListEditor({
+  active,
+  archived,
+  loading,
+  onEdit,
+  onAdd,
+}: HabitListEditorProps) {
   const gun = useGun();
-  const { data: rawHabits, loading } = useGunMap<Record<string, unknown>>("habits");
-
-  const { active, archived } = useMemo(() => {
-    const all = Object.entries(rawHabits).map(
-      ([id, raw]) => ({ ...raw, id } as unknown as Habit)
-    );
-    return {
-      active: all.filter((h) => !h.archived).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-      archived: all.filter((h) => h.archived).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-    };
-  }, [rawHabits]);
 
   const archiveHabit = (habit: Habit) => {
     if (!gun) return;
@@ -44,78 +34,71 @@ export function HabitListEditor({ onEdit, onAdd }: HabitListEditorProps) {
   };
 
   if (loading) {
-    return <div className="h-12 animate-pulse rounded-xl bg-[#1a1a1a]" />;
+    return <div className="mx-5 h-12 animate-pulse rounded-lg bg-secondary" />;
   }
 
   return (
-    <div className="space-y-3">
-      {/* Compact active habits list */}
-      <Collapsible>
-        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
-          <span>{active.length} active habit{active.length !== 1 ? "s" : ""}</span>
-          <ChevronDown className="size-4" />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2 space-y-0.5">
-          {active.map((habit) => (
+    <div>
+      <SheetAddRow label="Add habit" onClick={() => onAdd?.()} />
+
+      {active.map((habit) => (
+        <div
+          key={habit.id}
+          className="flex min-h-13 items-center gap-3 border-b border-border px-5 last:border-b-0"
+        >
+          <span className="flex text-muted-foreground">
+            <HabitIcon name={habit.name} size={17} />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-body text-foreground">
+            {habit.name}
+          </span>
+          <span className="shrink-0 rounded-sm bg-secondary px-2 py-0.5 font-mono text-micro text-muted-foreground">
+            {habit.frequency}
+          </span>
+          <button
+            type="button"
+            aria-label={`Edit ${habit.name}`}
+            onClick={() => onEdit?.(habit)}
+            className="-mr-1 flex size-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors active:bg-secondary"
+          >
+            <Pencil className="size-4" />
+          </button>
+          <button
+            type="button"
+            aria-label={`Archive ${habit.name}`}
+            onClick={() => archiveHabit(habit)}
+            className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors active:bg-secondary"
+          >
+            <Archive className="size-4" />
+          </button>
+        </div>
+      ))}
+
+      {archived.length > 0 && (
+        <>
+          <SheetGroupLabel>Archived ({archived.length})</SheetGroupLabel>
+          {archived.map((habit) => (
             <div
               key={habit.id}
-              className="group flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-[#1a1a1a]"
+              className="flex min-h-13 items-center gap-3 border-b border-border px-5 last:border-b-0"
             >
-              <span className="text-muted-foreground"><HabitIcon name={habit.name} size={15} /></span>
-              <span className="flex-1 truncate text-sm text-[#fafafa]">{habit.name}</span>
-              <Badge variant="secondary" className="text-[10px] text-muted-foreground">{habit.frequency}</Badge>
+              <span className="flex text-ink-3">
+                <HabitIcon name={habit.name} size={16} />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-body text-ink-3">
+                {habit.name}
+              </span>
               <button
-                onClick={() => onEdit?.(habit)}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-all p-1"
+                type="button"
+                aria-label={`Restore ${habit.name}`}
+                onClick={() => unarchiveHabit(habit)}
+                className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors active:bg-secondary"
               >
-                <Pencil className="size-3" />
-              </button>
-              <button
-                onClick={() => archiveHabit(habit)}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all p-1"
-              >
-                <Archive className="size-3" />
+                <ArchiveRestore className="size-4" />
               </button>
             </div>
           ))}
-        </CollapsibleContent>
-      </Collapsible>
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full border-dashed border-[#262626] text-xs"
-        onClick={() => onAdd?.()}
-      >
-        <Plus className="size-3.5" />
-        Add habit
-      </Button>
-
-      {/* Archived */}
-      {archived.length > 0 && (
-        <Collapsible>
-          <CollapsibleTrigger className="flex w-full items-center gap-2 px-1 py-1 text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground">
-            <ChevronDown className="size-3" />
-            Archived ({archived.length})
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-1 space-y-0.5">
-            {archived.map((habit) => (
-              <div
-                key={habit.id}
-                className="group flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors hover:bg-[#1a1a1a]"
-              >
-                <span className="text-muted-foreground/40 ml-4"><HabitIcon name={habit.name} size={14} /></span>
-                <span className="flex-1 truncate text-sm text-muted-foreground">{habit.name}</span>
-                <button
-                  onClick={() => unarchiveHabit(habit)}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-all p-1"
-                >
-                  <ArchiveRestore className="size-3" />
-                </button>
-              </div>
-            ))}
-          </CollapsibleContent>
-        </Collapsible>
+        </>
       )}
     </div>
   );

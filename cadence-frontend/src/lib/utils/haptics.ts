@@ -1,8 +1,9 @@
 /**
  * Haptic feedback for PWA interactions.
  *
- * Uses navigator.vibrate() (Android, some iOS PWA contexts).
- * Falls back silently on unsupported platforms — no-op, no errors.
+ * Uses navigator.vibrate(): Android only. iOS Safari and iOS PWAs do not
+ * implement it on any path, so every call there is a silent no-op.
+ * Falls back silently on unsupported platforms, no errors.
  */
 
 type HapticPattern = "light" | "medium" | "heavy" | "success" | "error";

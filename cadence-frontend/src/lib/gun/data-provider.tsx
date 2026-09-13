@@ -20,6 +20,8 @@ interface LogEntry {
   completedAt: number | null;
   skipped?: boolean;
   skipReason?: string;
+  slipped?: boolean;
+  slipReason?: string;
 }
 
 interface DataState {
@@ -124,7 +126,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (!habitData || typeof habitData !== "object" || !habitId) return;
 
         const cleaned = stripGunMeta(habitData);
-        if (cleaned.done === undefined) return;
+        if (cleaned.done === undefined && cleaned.slipped === undefined) return;
 
         logsAccum.current[dateKey][habitId] = {
           done: !!cleaned.done,
@@ -133,6 +135,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           completedAt: (cleaned.completedAt as number) ?? null,
           skipped: !!cleaned.skipped,
           skipReason: (cleaned.skipReason as string) ?? "",
+          slipped: !!cleaned.slipped,
+          slipReason: (cleaned.slipReason as string) ?? "",
         };
 
         if (flushTimer) clearTimeout(flushTimer);

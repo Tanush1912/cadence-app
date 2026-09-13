@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useGun } from "@/lib/gun/gun-provider";
 import { useSelectedDate } from "@/lib/hooks/use-selected-date";
-import { useHabits } from "@/lib/hooks/use-habits";
+import { useHabits, useQuitHistory } from "@/lib/hooks/use-habits";
 import { useLogs } from "@/lib/hooks/use-logs";
-import { useStreaks } from "@/lib/hooks/use-streaks";
+import { useStreaks, useQuitStreaks } from "@/lib/hooks/use-streaks";
 import { useDailyProgress } from "@/lib/hooks/use-daily-progress";
 import { useAllHeatmapData } from "@/lib/hooks/use-heatmap-data";
 import { useSharedData } from "@/lib/gun/data-provider";
@@ -13,15 +13,15 @@ import { AppHeader } from "@/components/layout/terminal-header";
 import { DaySelector } from "./day-selector";
 import { CategoryFilter } from "./category-filter";
 import { HabitCard } from "./habit-card";
-import { DailyProgressBar } from "./daily-progress-bar";
 import { HabitDrawer } from "./habit-drawer";
 import { JournalCard } from "./journal-card";
 import { CheckinDrawer } from "./checkin-drawer";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { useExperiments } from "@/lib/hooks/use-experiments";
 import { ExperimentCard } from "./experiment-card";
-import { SearchDrawer } from "./search-drawer";
+import { SearchScreen } from "./search-screen";
 import { SkipDrawer } from "./skip-drawer";
+import { SlipSheet } from "./slip-sheet";
 import { BundleCard } from "./bundle-card";
 import { StreakRecoveryBanner } from "./streak-recovery-banner";
 import { CalendarDrawer } from "./calendar-drawer";
@@ -29,19 +29,22 @@ import { useCoachingNudges } from "@/lib/hooks/use-coaching-nudges";
 import { useBundles } from "@/lib/hooks/use-bundles";
 import { useNextAction } from "@/lib/hooks/use-next-action";
 import { useSystemHealth } from "@/lib/hooks/use-system-health";
+import { cn } from "@/lib/utils";
 import { isToday, todayKey } from "@/lib/utils/dates";
 import type { Habit, GroupName, FrictionScore } from "@/lib/types";
 
 export function HabitsPage() {
   const gun = useGun();
   const { selectedDate, setSelectedDate } = useSelectedDate();
-  const { habits, loading: habitsLoading } = useHabits(selectedDate);
-  const { logs, toggleLog, setFriction, loading: logsLoading } = useLogs(selectedDate);
+  const { habits, buildHabits, quitHabits, loading: habitsLoading } = useHabits(selectedDate);
+  const { logs, toggleLog, logSlip, setFriction, loading: logsLoading } = useLogs(selectedDate);
   const { streaks, recomputeStreak } = useStreaks();
-  const { completed, total, percentage } = useDailyProgress(habits, logs);
+  const { completed, total, percentage, quitTotal, quitHeld } = useDailyProgress(habits, logs);
   const { profile, updateProfile } = useProfile();
   const { activeExperiment, isExpired, endExperiment } = useExperiments();
   const { habits: rawHabits } = useSharedData();
+  const quitStreaks = useQuitStreaks(quitHabits);
+  const quitHistory = useQuitHistory(quitHabits);
   const nudges = useCoachingNudges();
   const { bundles } = useBundles();
   const nextAction = useNextAction(logs, total, completed);
@@ -65,8 +68,10 @@ export function HabitsPage() {
   const [skippingHabit, setSkippingHabit] = useState<Habit | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarHabit, setCalendarHabit] = useState<Habit | null>(null);
+  const [slipSheetOpen, setSlipSheetOpen] = useState(false);
+  const [slippingHabit, setSlippingHabit] = useState<Habit | null>(null);
 
-  const habitIds = useMemo(() => habits.map((h) => h.id), [habits]);
+  const habitIds = useMemo(() => buildHabits.map((h) => h.id), [buildHabits]);
   const heatmapData = useAllHeatmapData(habitIds);
 
   useEffect(() => {
@@ -100,10 +105,22 @@ export function HabitsPage() {
     setSkipDrawerOpen(true);
   }, []);
 
+  const handleSlip = useCallback((habit: Habit) => {
+    setSlippingHabit(habit);
+    setSlipSheetOpen(true);
+  }, []);
+
   const handleCalendar = useCallback((habit: Habit) => {
     setCalendarHabit(habit);
     setCalendarOpen(true);
   }, []);
+
+  const handleSearchHabit = useCallback((habitId: string) => {
+    const habit = rawHabits[habitId];
+    if (!habit) return;
+    setCalendarHabit(habit);
+    setCalendarOpen(true);
+  }, [rawHabits]);
 
   const handleAddNew = useCallback(() => {
     setEditingHabit(null);
@@ -114,11 +131,17 @@ export function HabitsPage() {
   const effectiveMinMode = isMinimumMode || isAutoSimplified;
 
   const filteredHabits = useMemo(() => {
-    let list = habits;
+    let list = buildHabits;
     if (effectiveMinMode) list = list.filter((h) => h.floor && h.floor.trim().length > 0);
     if (categoryFilter !== "all") list = list.filter((h) => h.group === categoryFilter);
     return list;
-  }, [habits, categoryFilter, effectiveMinMode]);
+  }, [buildHabits, categoryFilter, effectiveMinMode]);
+
+  // Quit habits skip the minimum-mode floor filter: a bad day is exactly when you slip.
+  const filteredQuitHabits = useMemo(() => {
+    if (categoryFilter === "all") return quitHabits;
+    return quitHabits.filter((h) => h.group === categoryFilter);
+  }, [quitHabits, categoryFilter]);
 
   const weekProgress = useMemo(() => {
     const progress: Record<string, number> = {};
@@ -128,10 +151,35 @@ export function HabitsPage() {
 
   const loading = habitsLoading || logsLoading;
 
+  // One banner slot by priority: the mode you chose, then the one the system chose, then the nudge.
+  const bannerSlot = isMinimumMode ? (
+    <div className="px-5 pb-2">
+      <div className="rounded-sm border border-amber-500/15 bg-amber-500/10 px-3 py-2">
+        <p className="text-micro text-amber-400">
+          Minimum mode. Floor versions only, resets tomorrow.
+        </p>
+      </div>
+    </div>
+  ) : isAutoSimplified ? (
+    <div className="px-5 pb-2">
+      <div className="rounded-sm border border-amber-500/15 bg-amber-500/10 px-3 py-2">
+        <p className="text-micro text-amber-400">Simplified. Focus on your minimum.</p>
+      </div>
+    </div>
+  ) : isToday(selectedDate) ? (
+    <div className="px-5 pb-2">
+      <StreakRecoveryBanner
+        onDismiss={() => {}}
+        recoveriesUsed={0}
+        maxRecoveries={2}
+      />
+    </div>
+  ) : null;
+
   if (!gun) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-foreground rounded-full animate-spin" />
+      <div className="flex h-full items-center justify-center">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-surface-3 border-t-foreground" />
       </div>
     );
   }
@@ -144,7 +192,12 @@ export function HabitsPage() {
         onSearch={() => setSearchOpen(true)}
         minimumMode={isMinimumMode}
         onToggleMinimumMode={isToday(selectedDate) ? toggleMinimumMode : undefined}
+        completed={completed}
+        total={total}
       />
+
+      {/* One banner slot, highest priority wins — modes never stack */}
+      {bannerSlot}
 
       <DaySelector
         selectedDate={selectedDate}
@@ -152,33 +205,22 @@ export function HabitsPage() {
         weekProgress={weekProgress}
       />
 
-      <DailyProgressBar
-        completed={completed}
-        total={total}
-        percentage={percentage}
-        goal={0.7}
-      />
-
-      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
-        {/* Streak recovery banner */}
-        {isToday(selectedDate) && (
-          <div className="px-4 pb-2">
-            <StreakRecoveryBanner
-              onDismiss={() => {}}
-              recoveriesUsed={0}
-              maxRecoveries={2}
-            />
-          </div>
+      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 128px)" }}>
+        {/* Next best action — the system speaking */}
+        {isToday(selectedDate) && nextAction && !isMinimumMode && (
+          <p className="px-5 pt-3 pb-1 text-title font-medium tracking-tight text-balance" style={{ color: "var(--primary)" }}>
+            {nextAction.message}
+          </p>
         )}
 
         {/* Journal — above habits */}
-        <div className="px-4 pb-2">
+        <div className="px-5 pt-2 pb-2">
           <JournalCard dateKey={selectedDate} />
         </div>
 
         {/* Bundles — one-tap complete */}
         {isToday(selectedDate) && Object.keys(bundles).length > 0 && (
-          <div className="px-4 pb-2 space-y-2">
+          <div className="space-y-2 px-5 pb-2">
             {Object.values(bundles).map((b) => {
               const ids = b.habitIds.split(",").filter(Boolean);
               const names: Record<string, string> = {};
@@ -200,7 +242,7 @@ export function HabitsPage() {
 
         {/* Active experiment */}
         {activeExperiment && rawHabits[activeExperiment.habitId] && (
-          <div className="px-4 pb-2">
+          <div className="px-5 pb-2">
             <ExperimentCard
               experiment={activeExperiment}
               habitName={rawHabits[activeExperiment.habitId].name}
@@ -210,57 +252,28 @@ export function HabitsPage() {
           </div>
         )}
 
-        {/* Next best action — the system speaking */}
-        {isToday(selectedDate) && nextAction && !isMinimumMode && (
-          <div className="px-5 py-3 mb-1">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/30 mb-1">next</p>
-            <p className="text-[15px] font-medium tracking-tight" style={{ color: "var(--primary)" }}>
-              {nextAction.message}
-            </p>
-          </div>
-        )}
+        <CategoryFilter selected={categoryFilter} onSelect={setCategoryFilter} />
 
-        {/* Auto-simplification banner */}
-        {health.shouldSimplify && !isMinimumMode && (
-          <div className="px-4 pb-2">
-            <div className="px-3 py-2 rounded-xl bg-amber-500/5 border border-amber-500/10">
-              <p className="text-[11px] text-amber-400/70">
-                simplified — focus on minimum
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Minimum mode toggle */}
-        {isToday(selectedDate) && (
-          <div className="px-4 pb-2 flex items-center justify-between">
-            <CategoryFilter selected={categoryFilter} onSelect={setCategoryFilter} />
-          </div>
-        )}
-        {!isToday(selectedDate) && (
-          <CategoryFilter selected={categoryFilter} onSelect={setCategoryFilter} />
-        )}
-
-        <div className="px-4 pb-4">
+        <div className="px-5 pb-4">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-foreground rounded-full animate-spin" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-surface-3 border-t-foreground" />
           </div>
-        ) : filteredHabits.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/30">
+        ) : filteredHabits.length === 0 && filteredQuitHabits.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-3">
               <circle cx="12" cy="12" r="10" /><path d="M8 12h8" />
             </svg>
-            <p className="text-sm text-muted-foreground">No habits for this day</p>
+            <p className="text-body text-muted-foreground">No habits for this day</p>
             <button
               onClick={handleAddNew}
-              className="text-sm text-primary font-medium mt-1"
+              className="relative mt-1 min-h-11 text-body font-medium text-primary"
             >
               Add your first habit
             </button>
           </div>
         ) : (
-          <div className="space-y-3.5">
+          <div className={isMinimumMode ? "space-y-2" : "space-y-3"}>
             {filteredHabits.map((habit) => (
               <HabitCard
                 key={habit.id}
@@ -283,16 +296,51 @@ export function HabitsPage() {
         )}
         </div>
 
+        {!loading && filteredQuitHabits.length > 0 && (
+          <>
+            <div className="flex items-center gap-2 px-5 pt-3 pb-2 text-micro text-ink-3">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              Quitting
+              <span className="ml-auto font-mono text-muted-foreground">
+                {quitHeld} held{isToday(selectedDate) ? " today" : ""}
+              </span>
+            </div>
+            <div className={cn("px-5 pb-4", isMinimumMode ? "space-y-2" : "space-y-3")}>
+              {filteredQuitHabits.map((habit) => (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  log={logs[habit.id]}
+                  streak={undefined}
+                  dateKey={selectedDate}
+                  heatmapData={[]}
+                  onToggle={handleToggle}
+                  onFriction={handleFriction}
+                  onEdit={handleEdit}
+                  onArchive={handleArchive}
+                  minimumMode={isMinimumMode}
+                  quitStreak={quitStreaks[habit.id]}
+                  quitHistory={quitHistory[habit.id]}
+                  onSlip={handleSlip}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
       </div>
 
       {/* Floating check-in button — show when viewing today + habits exist */}
       {isToday(selectedDate) && total > 0 && (
         <button
           onClick={() => setCheckinOpen(true)}
-          className="fixed right-5 w-9 h-9 rounded-full text-[#0a0a0a] shadow-lg flex items-center justify-center transition-colors z-10"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 64px)", backgroundColor: "var(--primary)" }}
+          aria-label="AI check-in"
+          className="fixed right-5 z-10 flex h-11 w-11 items-center justify-center rounded-full text-primary-foreground shadow-lg transition-colors"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)", backgroundColor: "var(--primary)" }}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
           </svg>
         </button>
@@ -307,13 +355,16 @@ export function HabitsPage() {
       <CheckinDrawer
         open={checkinOpen}
         onOpenChange={setCheckinOpen}
-        habits={habits}
+        habits={buildHabits}
         dateKey={selectedDate}
       />
 
-      <SearchDrawer
+      {/* Always mounted: preloads its subscription and autofocuses inside the click gesture. */}
+      <SearchScreen
         open={searchOpen}
         onOpenChange={setSearchOpen}
+        onSelectDate={setSelectedDate}
+        onSelectHabit={handleSearchHabit}
       />
 
       <SkipDrawer
@@ -321,6 +372,15 @@ export function HabitsPage() {
         habit={skippingHabit}
         dateKey={selectedDate}
         onOpenChange={setSkipDrawerOpen}
+      />
+
+      <SlipSheet
+        open={slipSheetOpen}
+        habit={slippingHabit}
+        dateKey={selectedDate}
+        cleanDays={slippingHabit ? quitStreaks[slippingHabit.id]?.clean ?? 0 : 0}
+        onOpenChange={setSlipSheetOpen}
+        onLogSlip={logSlip}
       />
 
 

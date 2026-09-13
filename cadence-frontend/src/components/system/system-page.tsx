@@ -1,26 +1,31 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useGun } from "@/lib/gun/gun-provider";
 import { useProfile } from "@/lib/hooks/use-profile";
 import { useExport } from "@/lib/hooks/use-export";
-import { SettingsCard } from "./settings-card";
+import { useGunMap } from "@/lib/hooks/use-gun-node";
+import { useBundles } from "@/lib/hooks/use-bundles";
+import { useExperiments } from "@/lib/hooks/use-experiments";
+import { todayKey } from "@/lib/utils/dates";
 import { HabitListEditor } from "./habit-list-editor";
 import { ExperimentCreator } from "./experiment-creator";
 import { BundleEditor } from "./bundle-editor";
 import { ReminderSettings } from "./reminder-settings";
-import { HabitDrawer } from "@/components/habits/habit-drawer";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import type { Habit, Profile } from "@/lib/types";
+import { SettingsSheet } from "./settings-sheet";
 import {
-  Download,
-  FileText,
-  Trash2,
-  Check,
-} from "lucide-react";
+  SettingsAction,
+  SettingsGroup,
+  SettingsGroupLabel,
+  SettingsRow,
+  SettingsRowLabel,
+  SettingsSlider,
+  SettingsToggleRow,
+  SettingsValue,
+} from "./settings-row";
+import { HabitDrawer } from "@/components/habits/habit-drawer";
+import type { Habit, Profile } from "@/lib/types";
 
 const ACCENT_COLORS: { value: string; color: string; label: string }[] = [
   { value: "white", color: "#fafafa", label: "White" },
@@ -37,10 +42,50 @@ export function SystemPage() {
   const { profile, updateProfile } = useProfile();
   const { exportJSON, exportMarkdown } = useExport();
 
+  // Gun's .off() is aggressive (gun.js:1263), so these subscriptions stay on the
+  // always-mounted page rather than inside sheets that unmount on close.
+  const { data: rawHabits, loading: habitsLoading } =
+    useGunMap<Record<string, unknown>>("habits");
+  const {
+    bundles,
+    createBundle,
+    deleteBundle,
+    loading: bundlesLoading,
+  } = useBundles();
+  const {
+    activeExperiment,
+    isExpired,
+    createExperiment,
+    endExperiment,
+    loading: experimentsLoading,
+  } = useExperiments();
+
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [habitsSheetOpen, setHabitsSheetOpen] = useState(false);
+  const [bundlesSheetOpen, setBundlesSheetOpen] = useState(false);
+  const [experimentsSheetOpen, setExperimentsSheetOpen] = useState(false);
+
+  const { active, archived } = useMemo(() => {
+    const all = Object.entries(rawHabits).map(
+      ([id, raw]) => ({ ...raw, id } as unknown as Habit)
+    );
+    return {
+      active: all
+        .filter((h) => !h.archived)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+      archived: all
+        .filter((h) => h.archived)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    };
+  }, [rawHabits]);
+
+  const bundleCount = Object.keys(bundles).length;
+  const isMinimumMode = !!(
+    profile.minimumMode && profile.minimumModeDate === todayKey()
+  );
 
   const handleEdit = useCallback((habit: Habit) => {
     setEditingHabit(habit);
@@ -76,44 +121,98 @@ export function SystemPage() {
     [updateProfile]
   );
 
+  const handleMinimumMode = useCallback(
+    (next: boolean) => {
+      updateProfile(
+        next
+          ? { minimumMode: true, minimumModeDate: todayKey() }
+          : { minimumMode: false, minimumModeDate: "" }
+      );
+    },
+    [updateProfile]
+  );
+
   return (
-    <div className="mx-auto w-full max-w-lg space-y-4 px-4" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
-      <h1 className="text-lg font-semibold text-[#fafafa]">Settings</h1>
+    <div
+      className="mx-auto w-full max-w-lg px-4"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)",
+      }}
+    >
+      <h1 className="text-page-title font-semibold tracking-tight text-foreground">
+        Settings
+      </h1>
 
-      {/* Habits */}
-      <SettingsCard title="Habits">
-        <HabitListEditor onEdit={handleEdit} onAdd={handleAdd} />
-      </SettingsCard>
+      <SettingsGroupLabel>Your system</SettingsGroupLabel>
+      <SettingsGroup>
+        <SettingsAction
+          label="Habits"
+          value={`${active.length} active`}
+          onClick={() => setHabitsSheetOpen(true)}
+        />
+        <SettingsAction
+          label="Bundles"
+          value={`${bundleCount} of 3`}
+          onClick={() => setBundlesSheetOpen(true)}
+        />
+        <SettingsAction
+          label="Experiments"
+          value={activeExperiment ? "1 running" : "none"}
+          onClick={() => setExperimentsSheetOpen(true)}
+        />
+      </SettingsGroup>
 
-      {/* Experiments */}
-      {/* Bundles */}
-      <BundleEditor />
-
-      {/* Experiments */}
-      <ExperimentCreator />
-
-      {/* Gemini API Key — compact pill when set, input when not */}
-      {profile.aiKey ? (
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#141414] rounded-full border border-[#262626]">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--primary)" }} />
-            <span className="text-sm text-muted-foreground">Gemini key added</span>
+      <SettingsGroupLabel>Daily</SettingsGroupLabel>
+      <SettingsGroup>
+        <ReminderSettings />
+        <SettingsRow className="flex-col items-stretch gap-1 py-2">
+          <div className="flex items-center justify-between">
+            <span className="text-body text-foreground">Daily goal</span>
+            <SettingsValue>
+              {Math.round((profile.dailyGoal ?? 0.7) * 100)}%
+            </SettingsValue>
           </div>
-          <button
-            onClick={() => {
-              setApiKeyInput("");
-              updateProfile({ aiKey: "" });
-            }}
-            className="text-xs text-red-400/60 hover:text-red-400 transition-colors"
-          >
-            Remove
-          </button>
-        </div>
-      ) : (
-        <div className="px-4 py-3 bg-[#141414] rounded-2xl border border-[#262626] space-y-2">
-          <label className="text-xs text-muted-foreground">Gemini API Key</label>
-          <div className="relative">
+          <SettingsSlider
+            label="Daily goal"
+            min={0.5}
+            max={1}
+            step={0.05}
+            value={profile.dailyGoal ?? 0.7}
+            onChange={handleGoalChange}
+          />
+        </SettingsRow>
+        <SettingsToggleRow
+          label="Minimum mode"
+          checked={isMinimumMode}
+          onChange={handleMinimumMode}
+        />
+      </SettingsGroup>
+
+      <SettingsGroupLabel>AI features</SettingsGroupLabel>
+      <SettingsGroup>
+        {profile.aiKey ? (
+          <SettingsRow>
+            <span className="size-2 shrink-0 rounded-full bg-primary" />
+            <SettingsRowLabel>Gemini key added</SettingsRowLabel>
+            <button
+              type="button"
+              onClick={() => {
+                setApiKeyInput("");
+                updateProfile({ aiKey: "" });
+              }}
+              className="-mr-2 flex h-11 shrink-0 items-center px-2 text-label text-destructive"
+            >
+              Remove
+            </button>
+          </SettingsRow>
+        ) : (
+          <SettingsRow className="flex-col items-stretch gap-2 py-3">
+            <label htmlFor="gemini-key" className="text-micro text-ink-3">
+              Gemini API key
+            </label>
             <input
+              id="gemini-key"
               type="password"
               value={apiKeyInput}
               onChange={(e) => {
@@ -121,124 +220,120 @@ export function SystemPage() {
                 updateProfile({ aiKey: e.target.value });
               }}
               placeholder="AIza..."
-              className="w-full rounded-lg border border-[#262626] bg-[#0a0a0a] px-3 py-2 font-mono text-sm text-[#fafafa] outline-none transition-colors focus:border-[#404040]"
+              className="w-full rounded-sm border border-border bg-background px-3 py-3 font-mono text-body text-foreground transition-colors outline-none placeholder:text-ink-3 focus:border-surface-3"
             />
-          </div>
-          <p className="text-[11px] text-muted-foreground/40">
-            Enables AI reflections, voice transcription, and check-in.
-          </p>
-        </div>
-      )}
+            <p className="text-micro text-muted-foreground">
+              Enables AI reflections, voice transcription, and check-in.
+            </p>
+          </SettingsRow>
+        )}
+      </SettingsGroup>
 
-      {/* Reminders */}
-      <ReminderSettings />
-
-      {/* Appearance */}
-      <SettingsCard title="Appearance">
-        <div className="space-y-4">
-          {/* Daily goal slider */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">
-                Daily goal
-              </label>
-              <span className="font-mono text-xs text-[#fafafa]">
-                {Math.round((profile.dailyGoal ?? 0.7) * 100)}%
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0.5"
-              max="1"
-              step="0.05"
-              value={profile.dailyGoal ?? 0.7}
-              onChange={handleGoalChange}
-              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#262626] accent-[#fafafa] [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#fafafa]"
-            />
-            <div className="flex justify-between text-[10px] text-[#404040]">
-              <span>50%</span>
-              <span>100%</span>
-            </div>
-          </div>
-
-          <Separator className="bg-[#262626]" />
-
-          {/* Accent color */}
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">
-              Accent color
-            </label>
-            <div className="flex gap-3">
-              {ACCENT_COLORS.map(({ value, color, label }) => {
-                const isSelected =
-                  (profile.accent ?? "green") === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    title={label}
-                    onClick={() =>
-                      updateProfile({
-                        accent: value as Profile["accent"],
-                      })
-                    }
+      <SettingsGroupLabel>Appearance</SettingsGroupLabel>
+      <SettingsGroup>
+        <SettingsRow>
+          <SettingsRowLabel>Accent</SettingsRowLabel>
+          <div className="-mr-1 flex shrink-0 items-center">
+            {ACCENT_COLORS.map(({ value, color, label }) => {
+              const isSelected = (profile.accent ?? "green") === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-label={label}
+                  aria-pressed={isSelected}
+                  onClick={() =>
+                    updateProfile({ accent: value as Profile["accent"] })
+                  }
+                  className="flex h-11 w-9 items-center justify-center"
+                >
+                  <span
                     className={cn(
-                      "relative flex size-8 items-center justify-center rounded-full transition-transform hover:scale-110",
-                      value === "white" && "ring-1 ring-white/20"
+                      "size-[22px] rounded-full",
+                      isSelected && "outline-2 outline-offset-2 outline-foreground"
                     )}
                     style={{ backgroundColor: color }}
-                  >
-                    {isSelected && (
-                      <Check className="size-4 text-black" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                  />
+                </button>
+              );
+            })}
           </div>
-        </div>
-      </SettingsCard>
+        </SettingsRow>
+      </SettingsGroup>
 
-      {/* Data */}
-      {/* Data — tucked away, not prominent */}
-      <div className="px-1 space-y-3">
-        <div className="flex items-center gap-3">
-          <button onClick={exportJSON} className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-            Export JSON
-          </button>
-          <span className="text-muted-foreground/20">&middot;</span>
-          <button onClick={exportMarkdown} className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-            Export Markdown
-          </button>
-          <span className="text-muted-foreground/20">&middot;</span>
-          <button
+      <SettingsGroupLabel>Data</SettingsGroupLabel>
+      <SettingsGroup>
+        <SettingsAction label="Export JSON" onClick={exportJSON} />
+        <SettingsAction label="Export Markdown" onClick={exportMarkdown} />
+      </SettingsGroup>
+
+      <div className="pt-6">
+        <SettingsGroup>
+          <SettingsAction
+            label={confirmClear ? "Tap again to clear everything" : "Clear all data"}
+            destructive
+            chevron={false}
             onClick={handleClearData}
-            className={`text-xs transition-colors ${confirmClear ? "text-red-400" : "text-muted-foreground/50 hover:text-red-400/70"}`}
-          >
-            {confirmClear ? "Confirm clear" : "Clear data"}
-          </button>
+          />
           {confirmClear && (
-            <button onClick={() => setConfirmClear(false)} className="text-xs text-muted-foreground/40 hover:text-muted-foreground">
-              Cancel
-            </button>
+            <SettingsAction
+              label="Cancel"
+              chevron={false}
+              onClick={() => setConfirmClear(false)}
+            />
           )}
-        </div>
+        </SettingsGroup>
       </div>
 
-      {/* About */}
-      <SettingsCard title="About">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-[#fafafa]">Cadence</span>
-            <Badge variant="secondary" className="font-mono text-[10px]">
-              v1.0
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Your data stays on your device.
-          </p>
-        </div>
-      </SettingsCard>
+      <p className="pt-8 text-center text-micro text-ink-3">
+        Cadence 2.0
+        <br />
+        Your data stays on your device.
+      </p>
+
+      <SettingsSheet
+        open={habitsSheetOpen}
+        onOpenChange={setHabitsSheetOpen}
+        title="Habits"
+        description={`${active.length} active. Tap a habit to edit it, or archive it to hide it without losing its history.`}
+      >
+        <HabitListEditor
+          active={active}
+          archived={archived}
+          loading={habitsLoading}
+          onEdit={handleEdit}
+          onAdd={handleAdd}
+        />
+      </SettingsSheet>
+
+      <SettingsSheet
+        open={bundlesSheetOpen}
+        onOpenChange={setBundlesSheetOpen}
+        title="Bundles"
+        description={`Group habits so one tap completes all of them. ${bundleCount} of 3 used.`}
+      >
+        <BundleEditor
+          bundles={bundles}
+          createBundle={createBundle}
+          deleteBundle={deleteBundle}
+          loading={bundlesLoading}
+        />
+      </SettingsSheet>
+
+      <SettingsSheet
+        open={experimentsSheetOpen}
+        onOpenChange={setExperimentsSheetOpen}
+        title="Experiments"
+        description="Change one thing about a habit for two weeks, then compare consistency before and after. One at a time."
+      >
+        <ExperimentCreator
+          activeExperiment={activeExperiment}
+          isExpired={isExpired}
+          createExperiment={createExperiment}
+          endExperiment={endExperiment}
+          loading={experimentsLoading}
+        />
+      </SettingsSheet>
 
       <HabitDrawer
         open={drawerOpen}

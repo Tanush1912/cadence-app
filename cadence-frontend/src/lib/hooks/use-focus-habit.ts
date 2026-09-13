@@ -5,6 +5,7 @@ import { useSharedData } from "@/lib/gun/data-provider";
 import { todayKey, addDays } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
 import type { Habit } from "@/lib/types";
+import { isQuitHabit } from "@/lib/types";
 
 export interface FocusHabit {
   habit: Habit;
@@ -24,7 +25,7 @@ export function useFocusHabit(dateKey: string): FocusHabit | null {
 
     const today = todayKey();
     const habits = Object.values(rawHabits).filter(
-      (h) => !h.archived && isScheduledOn(h.frequency, dateKey)
+      (h) => !h.archived && !isQuitHabit(h) && isScheduledOn(h.frequency, dateKey)
     );
 
     if (habits.length === 0) return null;

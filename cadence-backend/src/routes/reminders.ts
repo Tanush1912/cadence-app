@@ -1,10 +1,18 @@
 import { Hono } from "hono";
 import webpush from "web-push";
 
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || "BOpPCHueJR9MKSK-hYIKnj3F1f4er3DbG8SpMFou0fKct97XzDjPTqam0PbQXer-Q9u4uUqo5SZkikoGS7Dy9j0";
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || "NYTrS4UkLSw-6OmTM4759ZKMDpEKX7nJgu4uyEbKDYg";
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
+const VAPID_MAILTO = process.env.VAPID_MAILTO ?? "mailto:cadence@localhost";
 
-webpush.setVapidDetails("mailto:cadence@localhost", VAPID_PUBLIC, VAPID_PRIVATE);
+// Fail loudly rather than falling back to a literal: a committed default leaked the last pair.
+export const pushConfigured = Boolean(VAPID_PUBLIC && VAPID_PRIVATE);
+
+if (pushConfigured) {
+  webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC!, VAPID_PRIVATE!);
+} else {
+  console.warn("[reminders] VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY unset, push disabled");
+}
 
 interface ReminderSubscription {
   subscription: webpush.PushSubscription;

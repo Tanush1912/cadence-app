@@ -2,11 +2,29 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useBundles } from "@/lib/hooks/use-bundles";
+import type { Bundle } from "@/lib/hooks/use-bundles";
 import { useSharedData } from "@/lib/gun/data-provider";
+import {
+  SheetAddRow,
+  SheetGroupLabel,
+  SheetPrimaryButton,
+  SheetSecondaryButton,
+} from "./settings-row";
+import { Trash2, Check } from "lucide-react";
 
-export function BundleEditor() {
-  const { bundles, createBundle, deleteBundle, loading } = useBundles();
+interface BundleEditorProps {
+  bundles: Record<string, Bundle>;
+  createBundle: (name: string, habitIds: string[]) => void;
+  deleteBundle: (id: string) => void;
+  loading?: boolean;
+}
+
+export function BundleEditor({
+  bundles,
+  createBundle,
+  deleteBundle,
+  loading,
+}: BundleEditorProps) {
   const { habits: rawHabits } = useSharedData();
 
   const [name, setName] = useState("");
@@ -43,34 +61,11 @@ export function BundleEditor() {
   };
 
   if (loading) {
-    return (
-      <div className="bg-[#141414] rounded-2xl border border-[#262626] p-5">
-        <h2 className="text-base font-semibold mb-3">Habit Bundles</h2>
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      </div>
-    );
+    return <div className="mx-5 h-12 animate-pulse rounded-lg bg-secondary" />;
   }
 
   return (
-    <div className="bg-[#141414] rounded-2xl border border-[#262626] p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-semibold">Habit Bundles</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Group habits and complete them together ({bundleList.length}/3)
-          </p>
-        </div>
-        {!showForm && !atLimit && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#262626] text-foreground hover:bg-[#303030] transition-colors"
-          >
-            + New
-          </button>
-        )}
-      </div>
-
-      {/* Existing bundles */}
+    <div>
       <AnimatePresence mode="popLayout">
         {bundleList.map((bundle) => {
           const ids = bundle.habitIds.split(",").filter(Boolean);
@@ -81,36 +76,23 @@ export function BundleEditor() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-2"
             >
-              <div className="flex items-center justify-between bg-[#1a1a1a] rounded-xl border border-[#262626] px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{bundle.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {ids.length} habit{ids.length !== 1 ? "s" : ""} —{" "}
-                    {ids
-                      .map((id) => rawHabits[id]?.name || "Unknown")
-                      .join(", ")}
+              <div className="flex min-h-13 items-center gap-3 border-b border-border px-5">
+                <div className="min-w-0 flex-1 py-2">
+                  <p className="truncate text-body text-foreground">{bundle.name}</p>
+                  <p className="truncate text-label text-muted-foreground">
+                    {ids.length} habit{ids.length !== 1 ? "s" : ""}
+                    {" · "}
+                    {ids.map((id) => rawHabits[id]?.name || "Unknown").join(", ")}
                   </p>
                 </div>
                 <button
+                  type="button"
+                  aria-label={`Delete ${bundle.name}`}
                   onClick={() => deleteBundle(bundle.id)}
-                  className="ml-3 shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                  className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors active:bg-secondary"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M3 6h18" />
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                  </svg>
+                  <Trash2 className="size-4" />
                 </button>
               </div>
             </motion.div>
@@ -119,12 +101,20 @@ export function BundleEditor() {
       </AnimatePresence>
 
       {bundleList.length === 0 && !showForm && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No bundles yet. Create one to batch-complete habits.
-        </p>
+        <div className="mx-5 mb-4 rounded-lg border border-dashed border-surface-3 px-4 py-5 text-center">
+          <p className="text-label text-muted-foreground">
+            No bundles yet. A bundle like &ldquo;Morning routine&rdquo; lets you tick
+            Meditate, Exercise and Journal together from the Habits tab.
+          </p>
+        </div>
       )}
 
-      {/* Create form */}
+      {!showForm && !atLimit && (
+        <div className="pt-3">
+          <SheetAddRow label="New bundle" onClick={() => setShowForm(true)} />
+        </div>
+      )}
+
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -133,76 +123,65 @@ export function BundleEditor() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="mt-3 pt-3 border-t border-[#262626]">
+            <SheetGroupLabel>New bundle</SheetGroupLabel>
+
+            <div className="px-5 pb-3">
+              <label className="mb-2 block text-micro text-ink-3" htmlFor="bundle-name">
+                Name
+              </label>
               <input
+                id="bundle-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Bundle name (e.g. Morning routine)"
+                placeholder="Morning routine"
                 maxLength={40}
-                className="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#404040] transition-colors"
+                className="w-full rounded-sm border border-border bg-background px-3 py-3 text-body text-foreground transition-colors outline-none placeholder:text-ink-3 focus:border-surface-3"
               />
+            </div>
 
-              <p className="text-xs text-muted-foreground mt-3 mb-2">
-                Select habits to include:
-              </p>
+            <p className="px-5 pb-1 text-micro text-ink-3">Include these habits</p>
 
-              <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
-                {activeHabits.map((habit) => (
-                  <label
-                    key={habit.id}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] cursor-pointer transition-colors"
+            {activeHabits.map((habit) => {
+              const checked = selectedIds.has(habit.id);
+              return (
+                <button
+                  key={habit.id}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={checked}
+                  onClick={() => toggleHabit(habit.id)}
+                  className="flex min-h-12 w-full items-center gap-3 px-5 text-left transition-colors active:bg-secondary"
+                >
+                  <span
+                    className={`flex size-6 shrink-0 items-center justify-center rounded-sm border-2 transition-colors ${
+                      checked
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-surface-3 bg-transparent"
+                    }`}
                   >
-                    <div
-                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                        selectedIds.has(habit.id)
-                          ? "bg-foreground border-foreground"
-                          : "border-[#404040] bg-transparent"
-                      }`}
-                    >
-                      {selectedIds.has(habit.id) && (
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#0a0a0a"
-                          strokeWidth="3.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-sm">{habit.emoji}</span>
-                    <span className="text-sm truncate">{habit.name}</span>
-                  </label>
-                ))}
-              </div>
+                    {checked && <Check className="size-3.5" strokeWidth={3.4} />}
+                  </span>
+                  <span className="truncate text-body text-foreground">{habit.name}</span>
+                </button>
+              );
+            })}
 
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={handleSave}
-                  disabled={!name.trim() || selectedIds.size === 0}
-                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-foreground text-background disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-                >
-                  Save Bundle
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="px-4 py-2.5 rounded-xl text-sm font-medium bg-[#262626] text-foreground hover:bg-[#303030] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="flex gap-2 px-5 pt-4">
+              <SheetPrimaryButton
+                onClick={handleSave}
+                disabled={!name.trim() || selectedIds.size === 0}
+              >
+                Save bundle
+              </SheetPrimaryButton>
+              <SheetSecondaryButton onClick={handleCancel}>Cancel</SheetSecondaryButton>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {atLimit && !showForm && (
-        <p className="text-xs text-muted-foreground mt-3">
+        <p className="px-5 pt-3 text-label text-muted-foreground">
           Maximum of 3 bundles reached. Delete one to create a new bundle.
         </p>
       )}

@@ -149,7 +149,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
           setVoiceState("idle");
         }
       } catch (err) {
-        setTranscribeError("Couldn't transcribe — try again");
+        setTranscribeError("Couldn't transcribe, try again");
         setVoiceState("idle");
       }
     } else {
@@ -262,7 +262,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
 
             {/* Errors */}
             {(transcribeError || recorderError) && (
-              <p className="px-4 pb-2 text-[10px] text-red-400">
+              <p className="px-4 pb-2 text-micro text-red-400">
                 {transcribeError || recorderError}
               </p>
             )}
@@ -279,7 +279,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
                   + add mood
                 </button>
               )}
-              <span className="text-[10px] text-muted-foreground/30 font-mono">
+              <span className="text-micro text-muted-foreground/30 font-mono">
                 {text.length}
               </span>
             </div>
@@ -322,7 +322,7 @@ async function transcribeAudio(blob: Blob, apiKey: string): Promise<string> {
     return data.text?.trim() ?? "";
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
-      throw new Error("Transcription timed out — try a shorter recording");
+      throw new Error("Transcription timed out, try a shorter recording");
     }
     throw err;
   } finally {

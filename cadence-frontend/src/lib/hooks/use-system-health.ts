@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useSharedData } from "@/lib/gun/data-provider";
 import { todayKey, addDays, fromDateKey } from "@/lib/utils/dates";
 import { isScheduledOn } from "@/lib/utils/frequency";
+import { isQuitHabit } from "@/lib/types";
 
 export interface SystemHealth {
   score: number;
@@ -34,7 +35,7 @@ export function useSystemHealth(): SystemHealth {
   return useMemo(() => {
     if (habitsLoading || !logsLoaded) return EMPTY;
 
-    const habits = Object.values(rawHabits).filter((h) => !h.archived);
+    const habits = Object.values(rawHabits).filter((h) => !h.archived && !isQuitHabit(h));
     if (habits.length === 0) return { ...EMPTY, loading: false };
 
     // Need at least 3 days of log data to compute a meaningful score
