@@ -9,8 +9,8 @@ const STARTER_HABITS = [
   { emoji: "\u{1F3CB}", name: "Exercise", floor: "10 minutes", group: "morning" },
   { emoji: "\u{1F4D3}", name: "Journal", floor: "1 sentence", group: "evening" },
   { emoji: "\u{1F4D6}", name: "Read", floor: "10 pages", group: "evening" },
-  { emoji: "\u{1F4A4}", name: "Sleep 8 hours", floor: "", group: "evening" },
-  { emoji: "\u{2615}", name: "No caffeine after 2pm", floor: "", group: "anytime" },
+  { emoji: "\u{1F4A4}", name: "Sleep 8 hours", floor: "7 hours", group: "evening" },
+  { emoji: "\u{2615}", name: "No caffeine after 2pm", floor: "", group: "anytime", type: "quit" as const },
   { emoji: "\u{1F4AA}", name: "Workout", floor: "15 minutes", group: "anytime" },
   { emoji: "\u{1F6B6}", name: "Walk 10k steps", floor: "5k steps", group: "anytime" },
 ];
@@ -37,6 +37,7 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
       gun.get("habits").get(id).put({
         name: h.name, emoji: h.emoji, group: h.group, frequency: "daily",
         floor: h.floor || "", order: idx + 1, archived: false, createdAt: Date.now(),
+        ...("type" in h && h.type ? { type: h.type } : {}),
       });
     });
     gun.get("profile").put({ username: "user", dailyGoal: 0.7, accent: "green", createdAt: Date.now() });
