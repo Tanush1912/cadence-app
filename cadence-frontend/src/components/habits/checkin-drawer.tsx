@@ -101,7 +101,7 @@ export function CheckinDrawer({ open, onOpenChange, habits, dateKey }: CheckinDr
       setMatches(ordered);
       setState("result");
     } catch (err) {
-      setError("Something went wrong — try again");
+      setError("Something went wrong, try again");
       setState("input");
     }
   }, [text, profile.aiKey, habits]);

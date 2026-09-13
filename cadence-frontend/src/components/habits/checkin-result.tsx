@@ -110,7 +110,7 @@ export function CheckinResult({
       <div className="pt-2 space-y-2">
         {unresolvedCount > 0 && (
           <p className="text-[11px] text-muted-foreground/60 text-center">
-            {unresolvedCount} habit{unresolvedCount > 1 ? "s" : ""} unresolved — they'll stay as-is
+            {unresolvedCount} habit{unresolvedCount > 1 ? "s" : ""} unresolved, they'll stay as-is
           </p>
         )}
         <button

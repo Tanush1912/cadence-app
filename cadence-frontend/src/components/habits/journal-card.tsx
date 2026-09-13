@@ -149,7 +149,7 @@ export function JournalCard({ dateKey }: { dateKey: string }) {
           setVoiceState("idle");
         }
       } catch (err) {
-        setTranscribeError("Couldn't transcribe — try again");
+        setTranscribeError("Couldn't transcribe, try again");
         setVoiceState("idle");
       }
     } else {
@@ -322,7 +322,7 @@ async function transcribeAudio(blob: Blob, apiKey: string): Promise<string> {
     return data.text?.trim() ?? "";
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
-      throw new Error("Transcription timed out — try a shorter recording");
+      throw new Error("Transcription timed out, try a shorter recording");
     }
     throw err;
   } finally {
