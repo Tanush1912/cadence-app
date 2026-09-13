@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || "";
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || "";
+const VAPID_PUBLIC = (process.env.VAPID_PUBLIC_KEY ?? "").trim();
+const VAPID_PRIVATE = (process.env.VAPID_PRIVATE_KEY ?? "").trim();
 const VAPID_MAILTO = process.env.VAPID_MAILTO || "mailto:hello@cadence.app";
 
-if (VAPID_PUBLIC && VAPID_PRIVATE) {
-  webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE);
+// A blank or malformed key must not break the build: setVapidDetails throws at
+// module scope, which fails page-data collection for the whole route.
+const urlSafeB64 = /^[A-Za-z0-9_-]+$/;
+const pushConfigured =
+  urlSafeB64.test(VAPID_PUBLIC) &&
+  urlSafeB64.test(VAPID_PRIVATE) &&
+  VAPID_PUBLIC.length === 87 &&
+  VAPID_PRIVATE.length === 43;
+
+if (pushConfigured) {
+  try {
+    webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC, VAPID_PRIVATE);
+  } catch {
+    console.warn("[reminders] VAPID keys rejected, push disabled");
+  }
+} else if (VAPID_PUBLIC || VAPID_PRIVATE) {
+  console.warn("[reminders] VAPID keys malformed, push disabled");
 }
 
 const subscribers = new Map<string, {
