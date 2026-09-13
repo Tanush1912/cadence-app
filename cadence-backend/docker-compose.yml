@@ -3,6 +3,10 @@ services:
     build: .
     ports:
       - "3099:3001"
+    environment:
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?set in .env, never commit}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?set in .env, never commit}
+      VAPID_MAILTO: ${VAPID_MAILTO:-mailto:cadence@localhost}
     volumes:
       - relay-data:/app/cadence-relay-data
     restart: unless-stopped
