@@ -286,7 +286,7 @@ export function SystemPage() {
       </div>
 
       <p className="pt-8 text-center text-micro text-ink-3">
-        Cadence 1.0
+        Cadence 2.0
         <br />
         Your data stays on your device.
       </p>
